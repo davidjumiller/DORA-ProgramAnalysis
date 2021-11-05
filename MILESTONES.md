@@ -49,3 +49,62 @@ List of ideas being considered:
 - Bring ideas to the the TA on tuesday
 - Finalize an idea for milestone 2
 
+
+# Milestone 2
+
+## Description of Idea
+- JavaScript Functional Program Visualizer
+  - User provides a link to a public Github repository. 
+  - The program generates a visualization showing the relationships between different modules in the code (that is written in a functional fashion).
+  - Between modules (that are not third-party) in the code, the visualization will also show which functions and properties are used.
+  - The purpose of the program is to help identify redundant code in large projects and aid in making refactoring decisions.
+
+## TA Feedback
+- All ideas except for #2 are either not valid or too complicated for this project
+- For #2 it's important to be accurate when checking which calls are going where, for example be careful of multiple functions of the same name (overriding, overloading)
+
+## Responsibilities 
+- Everyone
+  - Attend weekly meetings, monday + thursday
+- David
+  - Milestone submissions
+  - Engine
+- Dhruv
+  - Visualizer
+  - Arrange 1-2 user(s) for the final user study.
+- Howard
+  - Video
+  - Fetching Service (or Upload)
+- Michelle
+  - Engine
+  - Arrange 1 user for the first user study
+
+## Roadmap
+- Research - By Monday, Nov 7
+  - Import/export syntax possibilities in Javascript based on specs provided by W3C and Linux Foundation.
+  - Identify appropriate libraries for AST parsing
+    - acorn?--AST looks “clean” but doesn’t seem to support parsing of “import” statements according to astexplorer.net
+    - typescript--more detailed info from the AST, may contain more unnecessary data in the AST, but can support parsing for pretty much any type of JS code.
+    - flow--type inference
+  - Identify appropriate format and mechanism for generating the visualisation graph.
+  - Identify mechanism to fetch and read source code from Github.
+- First User study
+  - Modify the design based on the first user study
+- Implementation
+  - Fetching Service (Or only upload?)
+    - Downloads source code from provided Github repository (only .js files?)
+  - Engine
+    - Checks the package.json file to determine third-party packages?
+    - Iterates through the source tree of JS files, parses them and identifies the relationships between each of the modules and their functions. 
+  - Visualizer (https://modeling-languages.com/javascript-drawing-libraries-diagrams/)
+    - Displays visual representation of the relationships in the parsed JS code
+
+
+## Due dates:
+- Milestone 3: Monday, Nov. 15th
+- Milestone 4: Friday, Nov. 19th
+- Milestone 5: Friday, Nov. 26th
+- Project: Wednesday Dec. 1st (8:59am)
+
+
+
