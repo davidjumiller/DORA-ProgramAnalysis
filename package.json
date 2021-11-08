@@ -1,0 +1,19 @@
+{
+  "name": "project2group24",
+  "version": "1.0.0",
+  "description": "A project created for our CPSC 410 course at UBC",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.students.cs.ubc.ca:cpsc410-2021w-t1/Project2Group24.git"
+  },
+  "author": "Howard, Dhruv, Michelle, David",
+  "license": "ISC",
+  "dependencies": {
+    "acorn": "^8.5.0"
+  }
+}
