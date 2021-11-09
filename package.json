@@ -16,7 +16,8 @@
   "license": "ISC",
   "dependencies": {
     "acorn": "^8.5.0",
-    "fs": "0.0.1-security",
-    "fastify": "^3.23.1"
+    "download-git-repo": "^3.0.2",
+    "fastify": "^3.23.1",
+    "fs": "0.0.1-security"
   }
 }
