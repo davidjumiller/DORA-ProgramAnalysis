@@ -3,20 +3,37 @@
 */
 
 import download from 'download-git-repo';
+import { v4 as uuidv4 } from 'uuid';
 
 const repoController = {};
 
+repoController.test = async(req, res) => {
+  res.code(200);
+  res.send({msg: 'Up and running!'});
+}
+
 repoController.fetch = async(req, res) => {
-  let body = req.body;
 
-  // TODO: get the link, then split it into owner and the repo name
-  // TODO: use uuid for the folder name
+  const folderName = uuidv4();
+  const dest = `./src/appData/${ folderName }`;
 
-  download('dhruv-tech/rivescript-brain', './src/appData/test', function (err) {
-    console.log(err ? 'Error' : 'Success');
+  const url = new URL(req.body.url);
+  const repo = url.pathname.substring(1);
+
+  download(repo, dest, function (err) {
+    if (err) {
+      console.log(`Error: ${ err.message }`);
+    }
+    else {
+      console.log(`Success, the repo is saved at ${ dest }`);
+    }
   });
 
-  res.send(200);
+  res.code(200);
+  res.send({
+    'msg': `Success, the repo is saved at ${ dest }`,
+    'dest': dest
+  })
 };
 
 export default repoController;
