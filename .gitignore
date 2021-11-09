@@ -1,7 +1,8 @@
 .DS_Store
 node_modules
 /dist
-
+src/outputs/*
+!src/outputs/.gitkeep
 
 # local env files
 .env.local
