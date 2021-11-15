@@ -99,6 +99,25 @@ List of ideas being considered:
   - Visualizer (https://modeling-languages.com/javascript-drawing-libraries-diagrams/)
     - Displays visual representation of the relationships in the parsed JS code
 
+# Milestone 3
+
+## Mockup
+
+DHRUV UPLOADS HERE THX
+
+## Notes on first user study
+
+Still in progress, expect in a few hours
+
+## Changes to original design
+
+Visualization changes were made, we originally intended to have an arrow going from every call to every callee, but this would end up being a lot of arrows. For less clutter we have arrows only between each file with additional information on click.
+
+## Progress so far
+
+Fetching service - saves js files found on github to our designated folder.
+Visualizer - design finalized for the most part (See Mockup), json input sent from engine also mostly finalized.
+Engine - File input and AST generation finished, AST Visitor and JSON output in progress.
 
 ## Due dates:
 - Milestone 3: Monday, Nov. 15th
