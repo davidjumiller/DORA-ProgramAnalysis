@@ -115,9 +115,9 @@ Visualization changes were made, we originally intended to have an arrow going f
 
 ## Progress so far
 
-Fetching service - saves js files found on github to our designated folder.
-Visualizer - design finalized for the most part (See Mockup), json input sent from engine also mostly finalized.
-Engine - File input and AST generation finished, AST Visitor and JSON output in progress.
+- Fetching service - saves js files found on github to our designated folder.
+- Visualizer - design finalized for the most part (See Mockup), json input sent from engine also mostly finalized.
+- Engine - File input and AST generation finished, AST Visitor and JSON output in progress.
 
 ## Due dates:
 - Milestone 3: Monday, Nov. 15th
