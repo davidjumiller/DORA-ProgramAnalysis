@@ -119,6 +119,98 @@ Visualization changes were made, we originally intended to have an arrow going f
 - Visualizer - design finalized for the most part (See Mockup), json input sent from engine also mostly finalized.
 - Engine - File input and AST generation finished, AST Visitor and JSON output in progress.
 
+## Working JSON input to visualizer
+
+    [
+      {
+          "id": 1,
+          "filePath": "/src/app.js",
+          "functions": [
+              {
+                  "signature": "foo(x)",
+                  "calledBy": [
+                      {
+                          "id": 2,
+                          "atLineNum": [
+                              100,
+                              152
+                          ],
+                          "countRefs": "3"
+                      },
+                      {
+                          "id": 3,
+                          "atLineNum": [
+                              10
+                          ],
+                          "countRefs": "1"
+                      }
+                  ]
+              },
+              {
+                  "signature": "foo(x, y)",
+                  "calledBy": [
+                      {
+                          "id": 2,
+                          "atLineNum": [
+                              102
+                          ],
+                          "countRefs": "1"
+                      }
+                  ]
+              }
+          ],
+          "importedInFiles": [
+              2,
+              3,
+              5,
+              10
+          ]
+      },
+      {
+          "id": 2,
+          "filePath": "/lib/haha.js",
+          "functions": [
+              {
+                  "signature": "blah(x)",
+                  "calledBy": [
+                      {
+                          "id": 3,
+                          "atLineNum": [
+                              110,
+                              125
+                          ],
+                          "countRefs": "2"
+                      },
+                      {
+                          "id": 10,
+                          "atLineNum": [
+                              1
+                          ],
+                          "countRefs": "1"
+                      }
+                  ]
+              },
+              {
+                  "signature": "bobTheBuilder(x, y)",
+                  "calledBy": [
+                      {
+                          "id": 3,
+                          "atLineNum": [
+                              100
+                          ],
+                          "countRefs": "1"
+                      }
+                  ]
+              }
+          ],
+          "importedInFiles": [
+              3,
+              5,
+              10
+          ]
+      }
+    ]
+
 ## Due dates:
 - Milestone 3: Monday, Nov. 15th
 - Milestone 4: Friday, Nov. 19th
