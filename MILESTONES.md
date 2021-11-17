@@ -137,7 +137,7 @@ List of ideas being considered:
 
 ## API output example to visualizer frontend
 
-(→) Certain changes/additions related to function call graph data are pending.
+(→) Note: Certain changes/additions related to function call graph data are pending here.
 
     [
       {
