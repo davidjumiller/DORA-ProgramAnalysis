@@ -56,7 +56,7 @@ List of ideas being considered:
 - JavaScript Functional Program Visualizer
   - User provides a link to a public Github repository. 
   - The program generates a visualization showing the relationships between different modules in the code (that is written in a functional fashion).
-  - Between modules (that are not third-party) in the code, the visualization will also show which functions and properties are used.
+  - Between modules (that are not third-party) in the code, the visualization will also show which functions are used, and provide their call graph.
   - The purpose of the program is to help identify redundant code in large projects and aid in making refactoring decisions.
 
 ## TA Feedback
