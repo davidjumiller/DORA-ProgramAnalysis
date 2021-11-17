@@ -101,13 +101,27 @@ List of ideas being considered:
 
 # Milestone 3
 
-## Mockup
+## Wireframe Diagrams (Visualization)
 
-DHRUV UPLOADS HERE THX
+### Entrypoint
+<img src="https://i.postimg.cc/CMPTQmqp/Slide1.jpg" alt="Figure 1. Relationship Screen (Entrypoint)">
+
+### Application Overlays
+<img src="https://i.postimg.cc/YqTcp0RX/Slide2.jpg" alt="Figure 2. Overlays">
+
+### Call graph layout
+<img src="https://i.postimg.cc/CLRTTkGB/Slide3.jpg" alt="Figure 1. Call graph screen">
 
 ## Notes on first user study
 
-Still in progress, expect in a few hours
+<b>User (JavaScript Developer)</b>: Look the wireframe diagrams provided. Comment on the usefulness of the tool presented and format in which data is presented visually.
+<ul> 
+  <li>The tool presented is helpful for identifying redundant code, visualising complexity of relationships between modules/functions and making refactoring descisions in case of functional JavaScript code.</li> 
+  <li>It could potentially also help in case a new engineer is inducted into a software team as it gives a good visual overview of the project.</li>
+  <li>The relationships between modules are presented clearly with the ability to hide nodes from specific directories to declutter the view.</li> 
+  <li>The modal view provides a good overview of the relationship between two modules. However, the details section for the rows of the table feel inadequate with only line numbers provided. It would be better if the names of the functions in which the reference is made could also be provided - going to the call graph to get this information feels unnecessary.</li> 
+  <li>The call graph is presented in the form of a hierarchy view, which is appropriate for the case. Ability to hide nodes from certain directories in this view as well would be nice.</li> 
+</ul>
 
 ## Changes to original design
 
@@ -121,7 +135,7 @@ Still in progress, expect in a few hours
 - Visualizer - design finalized for the most part (See Mockup), json input sent from engine also mostly finalized.
 - Engine - File input and AST generation finished, AST Visitor and JSON output in progress.
 
-## Working JSON input to visualizer
+## API output example to visualizer frontend
 
     [
       {
