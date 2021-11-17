@@ -131,7 +131,7 @@ List of ideas being considered:
 
 ## Progress so far
 
-- Fetching service - saves js files found on github to our designated folder.
+- Fetching service - saves js files found on github to our designated folder (done).
 - Visualizer - design finalized for the most part (See Mockup), json input sent from engine also mostly finalized.
 - Engine - File input and AST generation finished, AST Visitor and JSON output in progress.
 
@@ -228,6 +228,14 @@ List of ideas being considered:
           ]
       }
     ]
+
+# Next Milestone (WIP)
+
+## Feedback to be addressed
+<ul>
+  <li>Explore increasing complexity by adding multi-paradigm support i.e. analyse and visualize both functional and oop style components.</li>
+  <li>Await further feedback via email on static program analysis & visualization requirements (add here)</li>
+</ul>
 
 ## Due dates:
 - Milestone 3: Monday, Nov. 15th
