@@ -233,6 +233,11 @@ List of ideas being considered:
 
 ## Status of Implementation
 
+- Repository fetching (Done)
+- Server setup (Done)
+- Visualizer (WIP)
+- Core Parse engine (WIP), currently working on visitor
+
 ## Final User study plans
 
 <ul>
@@ -242,6 +247,10 @@ List of ideas being considered:
 </ul>
 
 ## Timeline
+- Finalize revised JSON output format from backend by Saturday 8am
+- Establish demo server by Saturday 12pm
+- Finish frontend visualizer based on finalized JSON format by Wednesday 24th EOD
+- Discuss further action plan for core engine on Monday.
 
 ## Feedback to be addressed
 <ul>
