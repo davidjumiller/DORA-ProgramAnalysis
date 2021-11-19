@@ -231,6 +231,12 @@ List of ideas being considered:
 
 # Next Milestone (WIP)
 
+## Status of Implementation
+
+## Final User study plans
+
+## Timeline
+
 ## Feedback to be addressed
 <ul>
   <li>Explore increasing complexity by adding multi-paradigm support i.e. analyse and visualize both functional and oop style components.</li>
