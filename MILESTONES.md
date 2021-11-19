@@ -229,7 +229,7 @@ List of ideas being considered:
       }
     ]
 
-# Next Milestone (WIP)
+# Milestone 4
 
 ## Status of Implementation
 
