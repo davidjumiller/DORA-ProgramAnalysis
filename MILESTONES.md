@@ -56,7 +56,7 @@ List of ideas being considered:
 - JavaScript Functional Program Visualizer
   - User provides a link to a public Github repository. 
   - The program generates a visualization showing the relationships between different modules in the code (that is written in a functional fashion).
-  - Between modules (that are not third-party) in the code, the visualization will also show which functions and properties are used.
+  - Between modules (that are not third-party) in the code, the visualization will also show which functions are used, and provide their call graph.
   - The purpose of the program is to help identify redundant code in large projects and aid in making refactoring decisions.
 
 ## TA Feedback
@@ -99,6 +99,143 @@ List of ideas being considered:
   - Visualizer (https://modeling-languages.com/javascript-drawing-libraries-diagrams/)
     - Displays visual representation of the relationships in the parsed JS code
 
+# Milestone 3
+
+## Wireframe Diagrams (Visualization)
+
+### Entrypoint
+<img src="https://i.postimg.cc/CMPTQmqp/Slide1.jpg" alt="Figure 1. Relationship Screen (Entrypoint)">
+
+### Application Overlays
+<img src="https://i.postimg.cc/YqTcp0RX/Slide2.jpg" alt="Figure 2. Overlays">
+
+### Call graph layout
+<img src="https://i.postimg.cc/CLRTTkGB/Slide3.jpg" alt="Figure 1. Call graph screen">
+
+## Notes on first user study
+
+<b>User (JavaScript Developer)</b>: Look the wireframe diagrams provided. Comment on the usefulness of the tool presented and format in which data is presented visually.
+<ul> 
+  <li>The tool presented is helpful for identifying redundant code, visualising complexity of relationships between modules/functions and making refactoring descisions in case of functional JavaScript code.</li> 
+  <li>It could potentially also help in case a new engineer is inducted into a software team as it gives a good visual overview of the project.</li>
+  <li>The relationships between modules are presented clearly with the ability to hide nodes from specific directories to declutter the view.</li> 
+  <li>The modal view provides a good overview of the relationship between two modules. However, the details section for the rows of the table feel inadequate with only line numbers provided. It would be better if the names of the functions in which the reference is made could also be provided - going to the call graph to get this information feels unnecessary.</li> 
+  <li>The call graph is presented in the form of a hierarchy view, which is appropriate for the case. Ability to hide nodes from certain directories in this view as well would be nice.</li> 
+</ul>
+
+## Changes to original design
+
+ - Visualization changes were made, we originally intended to have an arrow going from every call to every callee, but this would end up being a lot of arrows. For less clutter we have arrows only between each file with additional information on click.
+
+- Further added a sidebar with the ability to hide the modules contained in a certain directory to help the user navigate the visualization better and reduce visual overload
+
+## Progress so far
+
+- Fetching service - saves js files found on github to our designated folder (done).
+- Visualizer - design finalized for the most part (See Mockup), json input sent from engine also mostly finalized.
+- Engine - File input and AST generation finished, AST Visitor and JSON output in progress.
+
+## API output example to visualizer frontend
+
+(→) Note: Certain changes/additions related to function call graph data are pending here.
+
+    [
+      {
+          "id": 1,
+          "filePath": "/src/app.js",
+          "functions": [
+              {
+                  "signature": "foo(x)",
+                  "calledBy": [
+                      {
+                          "id": 2,
+                          "atLineNum": [
+                              100,
+                              152
+                          ],
+                          "countRefs": "3"
+                      },
+                      {
+                          "id": 3,
+                          "atLineNum": [
+                              10
+                          ],
+                          "countRefs": "1"
+                      }
+                  ]
+              },
+              {
+                  "signature": "foo(x, y)",
+                  "calledBy": [
+                      {
+                          "id": 2,
+                          "atLineNum": [
+                              102
+                          ],
+                          "countRefs": "1"
+                      }
+                  ]
+              }
+          ],
+          "importedInFiles": [
+              2,
+              3,
+              5,
+              10
+          ]
+      },
+      {
+          "id": 2,
+          "filePath": "/lib/haha.js",
+          "functions": [
+              {
+                  "signature": "blah(x)",
+                  "calledBy": [
+                      {
+                          "id": 3,
+                          "atLineNum": [
+                              110,
+                              125
+                          ],
+                          "countRefs": "2"
+                      },
+                      {
+                          "id": 10,
+                          "atLineNum": [
+                              1
+                          ],
+                          "countRefs": "1"
+                      }
+                  ]
+              },
+              {
+                  "signature": "bobTheBuilder(x, y)",
+                  "calledBy": [
+                      {
+                          "id": 3,
+                          "atLineNum": [
+                              100
+                          ],
+                          "countRefs": "1"
+                      }
+                  ]
+              }
+          ],
+          "importedInFiles": [
+              3,
+              5,
+              10
+          ]
+      }
+    ]
+
+# Next Milestone (WIP)
+
+## Feedback to be addressed
+<ul>
+  <li>Explore increasing complexity by adding multi-paradigm support i.e. analyse and visualize both functional and oop style components.</li>
+  <li>Await further feedback via email on static program analysis & visualization requirements (add here)</li>
+</ul>
 
 ## Due dates:
 - Milestone 3: Monday, Nov. 15th
