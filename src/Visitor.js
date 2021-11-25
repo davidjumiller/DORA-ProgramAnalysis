@@ -3,13 +3,33 @@ export default class Visitor {
         this.curFileID = curFileID;
         this.output = output;
     }
-    visitNodes(nodes) { for (let node of nodes) this.visitNode(node); }
+
+    visitNodes(nodes, vars) { 
+
+        let variables = [];
+        if (typeof vars != 'undefined') {
+            variables = vars;
+        }
+
+        // We do a first run through to identify variable declarations, also called "hoisting"
+        // This is necessary to obtain proper scope and identify which methods are being called
+        for (let node of nodes) {
+            if (node.type == 'VariableDeclaration') {
+                variables.push(...this.visitVariableDeclaration(node, variables));
+            }
+        }
+
+        // Do a second pass for everything else
+        for (let node of nodes) {
+            if (node.type != 'VariableDeclaration') {
+                this.visitNode(node); 
+            }
+        }
+    }
     visitNode(node) {
         switch (node.type) {
             case 'Program': return this.visitProgram(node);
             case 'ImportDeclaration': return this.visitImportDeclaration(node);
-            case 'VariableDeclaration': return this.visitVariableDeclaration(node);
-            case 'VariableDeclarator': return this.visitVariableDeclarator(node);
             case 'ExportNamedDeclaration': return this.visitExportNamedDeclaration(node);
             case 'FunctionDeclaration': return this.visitFunctionDeclaration(node);
             case 'Identifier': return this.visitIdentifier(node);
@@ -26,8 +46,38 @@ export default class Visitor {
     }
 
     // TODO: Check here for require statements
-    visitVariableDeclaration(node){ return this.visitNodes(node.declarations) }
-    visitVariableDeclarator(node){}
+    visitVariableDeclaration(node, vars){
+
+        // Keeps track of variables, adds additional class key to object if initialized to new object.
+        let variables = vars;
+        node.declarations.forEach(declaration => {
+            let matchingVar = variables.findIndex(variable => {
+                variable.name == declaration.id.name;
+            });
+            
+            // Push a new "variable" object
+            if (matchingVar == -1) {
+                let variable = {
+                    "name": declaration.id.name,
+                    "type": declaration.init,
+                }
+                if (declaration.init == "NewExpression") {
+                    variable["class"] = declaration.init.callee.name;
+                }
+                variables.push(variable);
+
+            // Edit an existing "variable" object
+            // This handles the case where two variables have the same name
+            // We overwrite the more global value with the local one
+            } else {
+                variables[matchingVar].type = declaration.init;
+                if (declaration.init == "NewExpression") {
+                    variables[matchingVar].class = declaration.init.callee.name;
+                }
+            }
+        });
+        return variables;
+    }
 
     // TODO: Check here for imports, remember the file paths are relative, need to figure that out somehow
     visitImportDeclaration(node){
