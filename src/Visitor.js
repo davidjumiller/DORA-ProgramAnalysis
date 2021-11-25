@@ -6,6 +6,7 @@ export default class Visitor {
 
     visitNodes(nodes, vars) { 
 
+        // Handle when this method is given an addition argument "vars"
         let variables = [];
         if (typeof vars != 'undefined') {
             variables = vars;
@@ -22,26 +23,32 @@ export default class Visitor {
         // Do a second pass for everything else
         for (let node of nodes) {
             if (node.type != 'VariableDeclaration') {
-                this.visitNode(node); 
+                this.visitNode(node, vars); 
             }
         }
     }
-    visitNode(node) {
+    visitNode(node, vars) {
+
+        // Handle if we are given a second parameter
+        let variables = [];
+        if (typeof vars != "undefined") { variables = vars }
+
+        // Dynamic dispatch for each node type in the AST
         switch (node.type) {
-            case 'Program': return this.visitProgram(node);
+            case 'Program': return this.visitProgram(node, variables);
             case 'ImportDeclaration': return this.visitImportDeclaration(node);
             case 'ExportNamedDeclaration': return this.visitExportNamedDeclaration(node);
-            case 'FunctionDeclaration': return this.visitFunctionDeclaration(node);
+            case 'FunctionDeclaration': return this.visitFunctionDeclaration(node, variables);
             case 'Identifier': return this.visitIdentifier(node);
             case 'Literal': return this.visitLiteral(node);
             case 'ExpressionStatement': return this.visitExpressionStatement(node);
             case 'CallExpression': return this.visitCallExpression(node);
-            case 'ClassDeclaration': return this.visitClassDeclaration(node);
-            case 'MethodDefinition': return this.visitMethodDefinition(node);
+            case 'ClassDeclaration': return this.visitClassDeclaration(node, variables);
+            case 'MethodDefinition': return this.visitMethodDefinition(node, variables);
         }
     }
-    visitProgram(node) { 
-        this.visitNodes(node.body); 
+    visitProgram(node, variables) { 
+        this.visitNodes(node.body, variables); 
         return;
     }
 
@@ -84,14 +91,14 @@ export default class Visitor {
         let fileObj = this.output.find(file => file.id == this.curFileID);
     }
 
-    visitFunctionDeclaration(node){
+    visitFunctionDeclaration(node, variables){
         let newFunction = this.buildFunctionObj(node.params, node.id.name);
         this.pushToFileObj(newFunction);
 
-        return this.visitNodes(node.body.body);
+        return this.visitNodes(node.body.body, variables);
     }
 
-    visitMethodDefinition(node){
+    visitMethodDefinition(node, variables){
         let newMethod = this.buildFunctionObj(node.value.params, node.key.name);
 
         let classInfo = {
@@ -101,7 +108,7 @@ export default class Visitor {
         newMethod["info"] = classInfo;
         this.pushToFileObj(newMethod);
 
-        return this.visitNodes(node.value.body.body);
+        return this.visitNodes(node.value.body.body, variables);
     }
 
     pushToFileObj(newObj){
@@ -144,10 +151,15 @@ export default class Visitor {
     visitCallExpression(node){
         let callParamCount, callName;
         callParamCount = node.arguments.length;
+
+        // Handle function calls ( eg. call(x, y) )
         if (node.callee.type == "Identifier") {
             callName = node.callee.name;
+
+        // Handle method calls ( eg. variable.call(x, y) )
         } else if (node.callee.type == "MemberExpression") {
             callName = node.callee.property.name;
+            // TODO: Make this more accurate by using variable type
         } else {
             console.log("Unrecognized type in CallExpression");
             return;
@@ -206,9 +218,9 @@ export default class Visitor {
 
     }
 
-    visitClassDeclaration(node){
+    visitClassDeclaration(node, variables){
         this.class = node.id.name;
-        this.visitNodes(node.body.body);
+        this.visitNodes(node.body.body, variables);
         this.class = "";
     }
 

@@ -8,8 +8,7 @@ let fileID = 0;
 
 let tempObj = {
     "id": "temp",
-    "calls": [],
-    "variables": []
+    "calls": []
 }
 
 objArrayOutput.push(tempObj);
