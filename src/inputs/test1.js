@@ -11,7 +11,23 @@ let tips = [
   "Shift click on an AST node to expand the whole subtree"
 ];
 
-function printTips() {
-  tips.forEach((tip, i) => console.log(`Tip ${i}:` + tip));
-  tips();
+function tips1(x, y) {
+
 }
+
+class class1 {
+  tips2(x, y) {
+  }
+}
+
+let classNew;
+classNew = new class1();
+classNew.tips2(1, 2);
+
+function printTips(x, y) {
+  tips.forEach((tip, i) => console.log(`Tip ${i}:` + tip));
+  tips.test();
+  tips1(x, y);
+}
+
+printTips(1, 2);

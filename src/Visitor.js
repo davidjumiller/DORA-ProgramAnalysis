@@ -16,7 +16,8 @@ export default class Visitor {
             case 'Literal': return this.visitLiteral(node);
             case 'ExpressionStatement': return this.visitExpressionStatement(node);
             case 'CallExpression': return this.visitCallExpression(node);
-            // TODO: Rest of the switch cases for node visitor
+            case 'ClassDeclaration': return this.visitClassDeclaration(node);
+            case 'MethodDefinition': return this.visitMethodDefinition(node);
         }
     }
     visitProgram(node) { 
@@ -28,39 +29,75 @@ export default class Visitor {
     visitVariableDeclaration(node){ return this.visitNodes(node.declarations) }
     visitVariableDeclarator(node){}
 
-    // TODO: Check here for imports
-    visitImportDeclaration(node){}
+    // TODO: Check here for imports, remember the file paths are relative, need to figure that out somehow
+    visitImportDeclaration(node){
+        let fileObj = this.output.find(file => file.id == this.curFileID);
+    }
 
-    // TODO: Check here for functions
     visitFunctionDeclaration(node){
-        let name = node.id.name;
-        let paramCount = node.params.length;
-        let signature = name + "(" + paramCount + ")";
-
-        let newFunction = {
-            "signature": signature,
-            "calledBy": []
-        }
-
-        this.output.forEach(file => {
-            if (file.id == this.curFileID){
-                file.functions.push(newFunction);
-            }
-        });
+        let newFunction = this.buildFunctionObj(node.params, node.id.name);
+        this.pushToFileObj(newFunction);
 
         return this.visitNodes(node.body.body);
     }
 
+    visitMethodDefinition(node){
+        let newMethod = this.buildFunctionObj(node.value.params, node.key.name);
+
+        let classInfo = {
+            "fromType": "Class",
+            "className": this.class
+        }
+        newMethod["info"] = classInfo;
+        this.pushToFileObj(newMethod);
+
+        return this.visitNodes(node.value.body.body);
+    }
+
+    pushToFileObj(newObj){
+        // Push the "function" object to the correct "file" object's array
+        this.output.forEach(file => {
+            if (file.id == this.curFileID){
+                file.functions.push(newObj  );
+            }
+        });
+    }
+
+    buildFunctionObj(paramArray, name) {
+        let paramCount = paramArray.length;
+
+        // Rebuild the function signature
+        let argumentString = "";
+        if (paramCount > 1) {
+            for (let i = 0; i < paramCount-1; i++) {
+                argumentString += paramArray[i].name + ", ";
+            }
+        }
+        if (paramCount > 0) {
+            argumentString += paramArray[paramCount-1].name;
+        }
+        let signature = name + "(" + argumentString + ")";
+
+        // Create a new "function" object to be pushed
+        let newFunction = {
+            "signature": signature,
+            "name": name,
+            "paramCount": paramCount,
+            "calledBy": []
+        }
+
+        return newFunction;
+    }
+
     visitExpressionStatement(node){ return this.visitNode(node.expression) }
+    
     visitCallExpression(node){
-        let calleeSignature, paramCount, name;
+        let callParamCount, callName;
+        callParamCount = node.arguments.length;
         if (node.callee.type == "Identifier") {
-            paramCount = node.arguments.length;
-            name = node.callee.name;
-            calleeSignature = name + "(" + paramCount + ")";
+            callName = node.callee.name;
         } else if (node.callee.type == "MemberExpression") {
-            // TODO
-            return;
+            callName = node.callee.property.name;
         } else {
             console.log("Unrecognized type in CallExpression");
             return;
@@ -68,11 +105,12 @@ export default class Visitor {
 
         let validFunctionFound = false;
         // Search each "file" object for the appropriate function that is being called
+        // TODO: Make this only check the current file, and files that have been imported 
         this.output.forEach(file => {
             // Don't check our temp object
             if (file.id != "temp"){
                 file.functions.forEach(func => {
-                    if (func.signature == calleeSignature) {
+                    if (func.name == callName && func.paramCount == callParamCount) {
                         validFunctionFound = true;
                         // Check if this function has been called in this file already, if so, increment countRef,
                         // and add the line number
@@ -91,7 +129,7 @@ export default class Visitor {
                                 "id": this.curFileID,
                                 "atLineNum": [node.loc.start.line],
                                 "countRefs": 1
-                            };
+                            }
                             func.calledBy.push(calledByObj);
                         } else {
                         }
@@ -99,6 +137,29 @@ export default class Visitor {
                 })
             }
         });
+
+        // If we can't find the matching function to this call, store it for later and try again
+        // after all files are read through.
+        if (validFunctionFound == false) {
+            this.output.forEach(file => {
+                if (file.id == "temp") {
+                    let tempObj = {
+                        "id": this.curFileID,
+                        "name": callName,
+                        "paramCount": callParamCount,
+                        "atLineNum": [node.loc.start.line]
+                    }
+                    file.calls.push(tempObj);
+                }
+            });
+        }
+
+    }
+
+    visitClassDeclaration(node){
+        this.class = node.id.name;
+        this.visitNodes(node.body.body);
+        this.class = "";
     }
 
     visitExportNamedDeclaration(node){}
