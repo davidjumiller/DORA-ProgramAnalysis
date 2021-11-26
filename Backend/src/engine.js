@@ -14,7 +14,7 @@ let tempObj = {
 objArrayOutput.push(tempObj);
 
 // Async read js file from input directory
-fs.readFile("./src/inputs/test1.js", "utf8", (err, input) => {
+fs.readFile("./Backend/src/inputs/test1.js", "utf8", (err, input) => {
     if (err) { console.log(err); } else {
 
         // Parse javascript into acorn's JSON format (AST) 
@@ -43,7 +43,7 @@ fs.readFile("./src/inputs/test1.js", "utf8", (err, input) => {
 
     // Async write json output file to outputs directory
     // **Just for testing purposes, delete later
-    fs.writeFile("./src/outputs/test1out.json",  JSON.stringify(objArrayOutput, null, 4), (err) => {
+    fs.writeFile("./Backend/src/outputs/test1out.json",  JSON.stringify(objArrayOutput, null, 4), (err) => {
         if (err) { console.log(err); } else {
             console.log("done write");
         }

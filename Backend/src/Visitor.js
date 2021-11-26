@@ -5,8 +5,7 @@ export default class Visitor {
     }
 
     visitNodes(nodes, vars) { 
-
-        // Handle when this method is given an addition argument "vars"
+        // Handle if we are given a second argument "vars", representing variables from higher levels of scope
         let variables = [];
         if (typeof vars != 'undefined') {
             variables = vars;
@@ -27,9 +26,9 @@ export default class Visitor {
             }
         }
     }
-    visitNode(node, vars) {
 
-        // Handle if we are given a second parameter
+    visitNode(node, vars) {
+        // Handle if we are given a second argument "vars", representing variables from higher levels of scope
         let variables = [];
         if (typeof vars != "undefined") { variables = vars }
 
@@ -42,18 +41,18 @@ export default class Visitor {
             case 'Identifier': return this.visitIdentifier(node);
             case 'Literal': return this.visitLiteral(node);
             case 'ExpressionStatement': return this.visitExpressionStatement(node);
-            case 'CallExpression': return this.visitCallExpression(node);
+            case 'CallExpression': return this.visitCallExpression(node, variables);
             case 'ClassDeclaration': return this.visitClassDeclaration(node, variables);
             case 'MethodDefinition': return this.visitMethodDefinition(node, variables);
         }
     }
-    visitProgram(node, variables) { 
-        this.visitNodes(node.body, variables); 
-        return;
+
+    visitProgram(node, vars) { 
+        this.visitNodes(node.body, vars);
     }
 
-    // TODO: Check here for require statements
     visitVariableDeclaration(node, vars){
+        // TODO: Check here for require statements, track them as imports
 
         // Keeps track of variables, adds additional class key to object if initialized to new object.
         let variables = vars;
@@ -73,9 +72,9 @@ export default class Visitor {
                 }
                 variables.push(variable);
 
-            // Edit an existing "variable" object
-            // This handles the case where two variables have the same name
-            // We overwrite the more global value with the local one
+            /** Edit an existing "variable" object. This handles the case where
+             *  two variables have the same name but different scopes. We overwrite 
+             *  the more global value with the local one */
             } else {
                 variables[matchingVar].type = declaration.init;
                 if (declaration.init == "NewExpression") {
@@ -91,14 +90,14 @@ export default class Visitor {
         let fileObj = this.output.find(file => file.id == this.curFileID);
     }
 
-    visitFunctionDeclaration(node, variables){
+    visitFunctionDeclaration(node, vars){
         let newFunction = this.buildFunctionObj(node.params, node.id.name);
         this.pushToFileObj(newFunction);
 
-        return this.visitNodes(node.body.body, variables);
+        return this.visitNodes(node.body.body, vars);
     }
 
-    visitMethodDefinition(node, variables){
+    visitMethodDefinition(node, vars){
         let newMethod = this.buildFunctionObj(node.value.params, node.key.name);
 
         let classInfo = {
@@ -108,7 +107,7 @@ export default class Visitor {
         newMethod["info"] = classInfo;
         this.pushToFileObj(newMethod);
 
-        return this.visitNodes(node.value.body.body, variables);
+        return this.visitNodes(node.value.body.body, vars);
     }
 
     pushToFileObj(newObj){
@@ -148,7 +147,7 @@ export default class Visitor {
 
     visitExpressionStatement(node){ return this.visitNode(node.expression) }
     
-    visitCallExpression(node){
+    visitCallExpression(node, vars){
         let callParamCount, callName;
         callParamCount = node.arguments.length;
 
@@ -159,7 +158,6 @@ export default class Visitor {
         // Handle method calls ( eg. variable.call(x, y) )
         } else if (node.callee.type == "MemberExpression") {
             callName = node.callee.property.name;
-            // TODO: Make this more accurate by using variable type
         } else {
             console.log("Unrecognized type in CallExpression");
             return;
@@ -168,6 +166,7 @@ export default class Visitor {
         let validFunctionFound = false;
         // Search each "file" object for the appropriate function that is being called
         // TODO: Make this only check the current file, and files that have been imported 
+        // TODO: Make this more accurate for method calls by checking the variables class
         this.output.forEach(file => {
             // Don't check our temp object
             if (file.id != "temp"){
@@ -218,9 +217,9 @@ export default class Visitor {
 
     }
 
-    visitClassDeclaration(node, variables){
+    visitClassDeclaration(node, vars){
         this.class = node.id.name;
-        this.visitNodes(node.body.body, variables);
+        this.visitNodes(node.body.body, vars);
         this.class = "";
     }
 
