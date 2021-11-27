@@ -271,7 +271,7 @@ Since now you have multiple choices at a method invocation, you will also need t
 
 ## Status on final user study
 
--User study planned to be completed at the beginning of next week
+- User study planned to be completed at the beginning of next week
 
 ## Plans for final video
 
