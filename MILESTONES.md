@@ -275,7 +275,7 @@ Since now you have multiple choices at a method invocation, you will also need t
 
 ## Plans for final video
 
-
+- Brief introduction about our project and what it does. Indicating what type of program analysis is our project. Justify the use case of the project (answering why we made the choice to make this program). Do a short demo of the visualization part. Then, mention the result of the user studies. Finally, evaluating the design and usefulness of our analysis.
 
 ## Timeline for remaining days
 
