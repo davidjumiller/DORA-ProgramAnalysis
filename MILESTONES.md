@@ -279,9 +279,9 @@ Since now you have multiple choices at a method invocation, you will also need t
 
 ## Timeline for remaining days
 
--Sunday, Nov 28. Working product to be completed.
--Monday, Nov 29. User study Completion.
--Tuesday, Nov 30. Final changes and video submission.
+- Sunday, Nov 28. Working product to be completed.
+- Monday, Nov 29. User study Completion.
+- Tuesday, Nov 30. Final changes and video submission.
 
 ## Due dates:
 - Milestone 3: Monday, Nov. 15th
