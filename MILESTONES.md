@@ -267,6 +267,22 @@ Since now you have multiple choices at a method invocation, you will also need t
     </ul>
 </ul>
 
+# Milestone 5
+
+## Status on final user study
+
+- User study planned to be completed at the beginning of next week
+
+## Plans for final video
+
+- Brief introduction about our project and what it does. Indicating what type of program analysis is our project. Justify the use case of the project (answering why we made the choice to make this program). Do a short demo of the visualization part. Then, mention the result of the user studies. Finally, evaluating the design and usefulness of our analysis.
+
+## Timeline for remaining days
+
+- Sunday, Nov 28. Working product to be completed.
+- Monday, Nov 29. User study Completion.
+- Tuesday, Nov 30. Final changes and video submission.
+
 ## Due dates:
 - Milestone 3: Monday, Nov. 15th
 - Milestone 4: Friday, Nov. 19th
