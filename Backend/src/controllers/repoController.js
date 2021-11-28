@@ -4,6 +4,7 @@
 
 import download from 'download-git-repo';
 import { v4 as uuidv4 } from 'uuid';
+import { readFolders } from '../engine.js';
 
 const repoController = {};
 
@@ -34,6 +35,14 @@ repoController.fetch = async(req, res) => {
     'msg': `Success, the repo is saved at ${ dest }`,
     'dest': dest
   })
-};
+}
+
+repoController.testRead = async(req, res) => {
+  readFolders('./src/inputs/testRepo');
+  res.code(200);
+  res.send({
+    'message': 'Success, the folders are read'
+  });
+}
 
 export default repoController;
