@@ -4,7 +4,7 @@
 
 import download from 'download-git-repo';
 import { v4 as uuidv4 } from 'uuid';
-import { readFolders } from '../engine.js';
+import { parseDir } from '../engine.js';
 
 const repoController = {};
 
