@@ -38,7 +38,7 @@ repoController.fetch = async(req, res) => {
 }
 
 repoController.testRead = async(req, res) => {
-  readFolders('./src/inputs/testRepo');
+  parseDir('./src/inputs/testRepo');
   res.code(200);
   res.send({
     'message': 'Success, the folders are read'
