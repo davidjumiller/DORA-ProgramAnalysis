@@ -1,5 +1,5 @@
 /*
-    Team 24, Music Maker DSL API
+    Team 24, DORA (Diagrammatic Observed Relationship Analyzer)
 */
 
 import fastify from 'fastify';
