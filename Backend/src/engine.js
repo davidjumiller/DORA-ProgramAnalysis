@@ -37,19 +37,20 @@ export const readFoldersSync = (objArrayOutput, pathName, fileID) => {
     const files = fs.readdirSync(pathName, {withFileTypes: true});
     files.forEach((file) => {
         const filePath = file.name;
-        const fullPath = path.resolve(pathName, filePath);
         const lcFilePath = filePath.toLowerCase();
+        const fullPath = path.resolve(pathName, filePath);
         const regex = /\.[\w]+\.js$/g;
         // Ignore any node_modules or hidden folders
         if (lcFilePath !== "node_modules" && file.isDirectory() && !lcFilePath.startsWith(".")) {
-            // console.log(`Read file path = ${pathName}/${filePath}}`);
+            // console.log(`Read file path = ${fullPath}`);
             readFoldersSync(objArrayOutput, fullPath, fileID);
 
             // Ignore everything other than .js fils (exclude .min.js, .d.js, etc as well)
         } else if (file.isFile() && lcFilePath.endsWith(".js") && !regex.test(lcFilePath)) {
-            getDepsForFile(fullPath);
-            readIndividualFile(objArrayOutput, fullPath, fileID);
-            // console.log(`reading file: ${lcFilePath}`);
+            // getDepsForFile(fullPath);
+            const relPath = path.relative(".", fullPath);
+            readIndividualFile(objArrayOutput, relPath, fileID);
+            console.log(`reading file: ${relPath}`);
         }
     });
 }
