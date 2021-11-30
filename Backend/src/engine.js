@@ -8,7 +8,7 @@ export const readIndividualFile = (objArrayOutput, pathName, fileID) => {
     const file = fs.readFileSync(pathName, {encoding:"utf8"});
 
     // Parse javascript into acorn's JSON format (AST) 
-    let parsedInput = acorn.parse(file, {ecmaVersion: "2020", sourceType: "module", locations: true});
+    let parsedInput = acorn.parse(file, {ecmaVersion: "latest", sourceType: "module", locations: true});
 
     let curID = fileID.value;
     fileID.value++;
