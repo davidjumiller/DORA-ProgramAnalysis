@@ -4,7 +4,7 @@ import path from 'path';
 import Visitor from './Visitor.js';
 
 // Async read js file from input directory
-export const readIndividualFile = (objArrayOutput, pathName, fileID) => {
+export const readIndividualFile = (objArrayOutput, pathName, fileID, repoID) => {
     const file = fs.readFileSync(pathName, {encoding:"utf8"});
 
     // Parse javascript into acorn's JSON format (AST) 
@@ -13,10 +13,12 @@ export const readIndividualFile = (objArrayOutput, pathName, fileID) => {
     let curID = fileID.value;
     fileID.value++;
 
+    const relPath = path.relative(`./src/inputs/${repoID}`, pathName);
+
     // Create a new "file" object for our output
     let fileObjSkeleton = {
         "id": curID,
-        "filePath": pathName,
+        "filePath": relPath,
         "functions": [],
         "imports": [],
         "importedInFiles": []
@@ -33,7 +35,7 @@ export const readIndividualFile = (objArrayOutput, pathName, fileID) => {
     visitor.visitNode(parsedInput);
 }
 
-export const readFoldersSync = (objArrayOutput, pathName, fileID) => {
+export const readFoldersSync = (objArrayOutput, pathName, fileID, repoID) => {
     const files = fs.readdirSync(pathName, {withFileTypes: true});
     files.forEach((file) => {
         const filePath = file.name;
@@ -43,19 +45,18 @@ export const readFoldersSync = (objArrayOutput, pathName, fileID) => {
         // Ignore any node_modules or hidden folders
         if (lcFilePath !== "node_modules" && file.isDirectory() && !lcFilePath.startsWith(".")) {
             // console.log(`Read file path = ${fullPath}`);
-            readFoldersSync(objArrayOutput, fullPath, fileID);
+            readFoldersSync(objArrayOutput, fullPath, fileID, repoID);
 
             // Ignore everything other than .js fils (exclude .min.js, .d.js, etc as well)
         } else if (file.isFile() && lcFilePath.endsWith(".js") && !regex.test(lcFilePath)) {
             // getDepsForFile(fullPath);
-            const relPath = path.relative(".", fullPath);
-            readIndividualFile(objArrayOutput, relPath, fileID);
-            console.log(`reading file: ${relPath}`);
+            readIndividualFile(objArrayOutput, fullPath, fileID, repoID);
+            console.log(`reading file: ${fullPath}`);
         }
     });
 }
 
-export const parseDir = (pathName) => {
+export const parseDir = (pathName, repoID) => {
 
     // Our output to send to visualizer
     let objArrayOutput = [];
@@ -71,7 +72,7 @@ export const parseDir = (pathName) => {
     let fileID = {
         "value": 1
     }
-    readFoldersSync(objArrayOutput, pathName, fileID);
+    readFoldersSync(objArrayOutput, pathName, fileID, repoID);
 
     /** Go through "temp" objects that couldn't be matched to functions
     *   on the first pass, either because there is no matching function locally,
@@ -129,6 +130,8 @@ export const parseDir = (pathName) => {
             console.log("done write");
         }
     });
+
+    return objArrayOutput;
 }
 
 const getDepsForFile = (repoPath) => {
