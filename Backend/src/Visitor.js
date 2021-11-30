@@ -43,11 +43,17 @@ export default class Visitor {
             case 'ClassDeclaration': return this.visitClassDeclaration(node, variables);
             case 'MethodDefinition': return this.visitMethodDefinition(node, variables);
             case 'AssignmentExpression': return this.visitAssignmentExpression(node, variables);
+            case 'ArrowFunctionExpression': return this.visitArrowFunctionExpression(node, variables);
+            case 'BlockStatement': return this.visitBlockStatement(node, variables);
         }
     }
 
     visitProgram(node) { 
         this.visitNodes(node.body);
+    }
+
+    visitBlockStatement(node, vars){
+        this.visitNodes(node.body, vars);
     }
 
     visitVariableDeclaration(node, vars){
@@ -99,9 +105,16 @@ export default class Visitor {
                     }
                 }
             });
+        } else if (node.left.type == "MemberExpression") {
+            // Not currently supported, (eg. example.name = 1;)
         } else {
-            console.log("Unhandled Expression, discarded");
+            console.log("Unhandled Expression, '" + node.left.type + "' discarded");
         }
+        this.visitNode(node.right, variables);
+    }
+
+    visitArrowFunctionExpression(node, vars){
+        this.visitNode(node.body, vars);
     }
 
     // Match imports to their respective files, if not found, add information to temp file to try again later.
@@ -207,7 +220,7 @@ export default class Visitor {
 
         let validFunctionFound = false;
         // Search each "file" object for the appropriate function that is being called
-        // TODO: Make this only check the current file, and files that have been imported 
+        // TODO: Make this only check the current file, and files that have been imported. To improve performance 
         this.output.forEach(file => {
             // Don't check our temp object, which is used to store calls that we can't match to functions yet
             if (file.id != "temp"){
@@ -261,6 +274,9 @@ export default class Visitor {
                 }
             });
         }
+
+        // Additionally, visit any nodes that may be in the arguments area (eg. example(func => { console.log() }))
+        this.visitNodes(node.arguments, vars);
 
     }
 
