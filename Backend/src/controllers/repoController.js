@@ -13,10 +13,10 @@ repoController.test = async(req, res) => {
   res.send({msg: 'Up and running!'});
 }
 
-repoController.fetch = async(req, res) => {
+repoController.fetchRepo = async(req, res) => {
 
   const folderName = uuidv4();
-  const dest = `./src/appData/${ folderName }`;
+  const dest = `./src/inputs/${ folderName }`;
 
   const url = new URL(req.body.url);
   const repo = url.pathname.substring(1);
@@ -24,15 +24,20 @@ repoController.fetch = async(req, res) => {
   download(repo, dest, function (err) {
     if (err) {
       console.log(`Error: ${ err.message }`);
+      res.code(400);
+      res.send({
+        'error': `Failed to download repo from the provided url ${url}. Make sure your repo is public and the link is correct.`,
+      })
     }
     else {
       console.log(`Success, the repo is saved at ${ dest }`);
+      parseDir(dest);
     }
   });
 
   res.code(200);
   res.send({
-    'msg': `Success, the repo is saved at ${ dest }`,
+    'msg': `Success, the repo is successfully parsed`,
     'dest': dest
   })
 }
