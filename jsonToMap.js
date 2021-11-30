@@ -27,7 +27,6 @@ const getFilesThatCallKeyFile = (json) => {
   return filesThatCallsKeyFile;
 }
 
-
 const getWhatKeyFileCalls = (json) => {
   let whatKeyFileCalls = new Map();
 
@@ -191,7 +190,6 @@ const findCallingFunc = (fileId, lineNumArr, json, visited) => {
   }
   return functionsCalling;
 }
-
 
 const json = [
   {
@@ -357,6 +355,5 @@ const json = [
 //getFilesThatCallKeyFile(json);
 //getWhatKeyFileCalls(json);
 
-let result = getCallHierarchy(1, "foo(x)", json);
+//let result = getCallHierarchy(1, "foo(x)", json);
 console.log(JSON.stringify(result, null, 4));
-

@@ -111,7 +111,7 @@ export const parseDir = (pathName) => {
 
     // Async write json output file to outputs directory
     // **Just for testing purposes, delete later
-    fs.writeFile("./Backend/src/outputs/test1out.json",  JSON.stringify(objArrayOutput, null, 4), (err) => {
+    fs.writeFile("./src/outputs/test1out.json",  JSON.stringify(objArrayOutput, null, 4), (err) => {
         if (err) { console.log(err); } else {
             console.log("done write");
         }
@@ -126,6 +126,6 @@ const getDepsForFile = (repoPath) => {
     */
 }
 
-parseDir("./Backend/src/inputs");
+parseDir("./src/inputs");
 
 // export default readFolders;
