@@ -1,7 +1,8 @@
 .DS_Store
 node_modules
 /dist
-src/inputs/testRepo/*
+src/inputs/*
+!src/inputs/test1.js
 src/outputs/*
 !src/outputs/.gitkeep
 
