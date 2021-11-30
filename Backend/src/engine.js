@@ -61,7 +61,8 @@ export const parseDir = (pathName) => {
 
     let tempObj = {
         "id": "temp",
-        "calls": []
+        "calls": [],
+        "imports": []
     }
 
     objArrayOutput.push(tempObj);
@@ -76,6 +77,17 @@ export const parseDir = (pathName) => {
     *   or we had not read through the file containing the function/method yet.
     *   Check them again here after all files are read through  */
     let tempIndex = objArrayOutput.findIndex(obj => obj.id == "temp");
+    // Final matching for imports
+    objArrayOutput[tempIndex].imports.forEach(imp => {
+        let importeeFileObj = objArrayOutput.find(file => { return file.id == imp.importeeFileID});
+        objArrayOutput.forEach(file => {
+            if (imp.filePath == file.filePath) {
+                importeeFileObj.imports.push(file.id);
+                file.importedInFiles.push(imp.importeeFileID);
+            }
+        });
+    });
+    // Final matching for calls
     objArrayOutput[tempIndex].calls.forEach(call => {
         objArrayOutput.forEach(file => {
             if (file.id != "temp") {
