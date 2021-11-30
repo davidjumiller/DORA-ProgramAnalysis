@@ -27,6 +27,272 @@
                 }
             }
         })
+
+
+        // Mockup data
+
+        let mockup = [
+            {
+                "id": 1,
+                "filePath": "/src/app.js",
+                "functions": [
+                {
+                    "signature": "foo(x)",
+                    "type": "O",
+                    "startLine": 135,
+                    "endLine": 150,
+                    "calledBy": [
+                    {
+                        "id": 2,
+                        "atLineNum": [
+                        100,
+                        152
+                        ],
+                        "countRefs": "3"
+                    },
+                    {
+                        "id": 3,
+                        "atLineNum": [
+                        10
+                        ],
+                        "countRefs": "1"
+                    }
+                    ]
+                },
+                {
+                    "signature": "foo(x, y)",
+                    "type": "P",
+                    "startLine": 99,
+                    "endLine": 111,
+                    "calledBy": [
+                    {
+                        "id": 2,
+                        "atLineNum": [
+                        102
+                        ],
+                        "countRefs": "1"
+                    }
+                    ]
+                }
+                ],
+                "importedInFiles": [
+                2,
+                3
+                ]
+            },
+            {
+                "id": 2,
+                "filePath": "/lib/haha.js",
+                "functions": [
+                {
+                    "signature": "blah(x)",
+                    "type": "O",
+                    "startLine": 95,
+                    "endLine": 110,
+                    "calledBy": [
+                    {
+                        "id": 1,
+                        "atLineNum": [
+                        110,
+                        125
+                        ],
+                        "countRefs": "2"
+                    },
+                    {
+                        "id": 2,
+                        "atLineNum": [
+                        1
+                        ],
+                        "countRefs": "1"
+                    }
+                    ]
+                },
+                {
+                    "signature": "bobTheBuilder(x, y)",
+                    "type": "Bam",
+                    "startLine": 135,
+                    "endLine": 155,
+                    "calledBy": [
+                    {
+                        "id": 3,
+                        "atLineNum": [
+                        100
+                        ],
+                        "countRefs": "1"
+                    },
+                    {
+                        "id": 1,
+                        "atLineNum": [
+                        69
+                        ],
+                        "countRefs": "1"
+                    }
+                    ]
+                }
+                ],
+                "importedInFiles": [
+                1,
+                3
+                ]
+            },
+            {
+                "id": 3,
+                "filePath": "/lib/bam.js",
+                "functions": [
+                {
+                    "signature": "hornet(x)",
+                    "type": "P",
+                    "startLine": 135,
+                    "endLine": 150,
+                    "calledBy": [
+                    {
+                        "id": 2,
+                        "atLineNum": [
+                        1
+                        ],
+                        "countRefs": "1"
+                    }
+                    ]
+                },
+                {
+                    "signature": "cornTheCorner(x, y)",
+                    "type": "AB",
+                    "startLine": 135,
+                    "endLine": 150,
+                    "calledBy": [
+                    {
+                        "id": 2,
+                        "atLineNum": [
+                        100
+                        ],
+                        "countRefs": "1"
+                    },
+                    {
+                        "id": 3,
+                        "atLineNum": [
+                        69
+                        ],
+                        "countRefs": "1"
+                    }
+                    ]
+                }
+                ],
+                "importedInFiles": [
+                1,
+                2
+                ]
+            }
+        ]
+
+        // get 2 maps : called by and calls to
+
+        const getFilesThatCallKeyFile = (json) => {
+
+            let filesThatCallsKeyFile = new Map();
+
+            for (const jsonElement of json) {
+
+            const currentFileId = jsonElement.id;
+            filesThatCallsKeyFile.set(currentFileId, []);
+
+            const funcArr = jsonElement.functions;
+
+                for (const func of funcArr) {
+
+                    const calledByArr = func.calledBy;
+
+                    for (const element of calledByArr) {
+
+                        let valueArr = filesThatCallsKeyFile.get(currentFileId);
+                        if (!valueArr.includes(element.id)) {
+                            valueArr.push(element.id);
+                        }
+                    }
+                }
+            }
+
+            console.log(filesThatCallsKeyFile);
+            return filesThatCallsKeyFile;
+        }
+
+        const getWhatKeyFileCalls = (json) => {
+            let whatKeyFileCalls = new Map();
+
+            for (const jsonElement of json) {
+                const currFileId = jsonElement.id;
+                whatKeyFileCalls.set(currFileId, []);
+
+                for (const otherFile of json) {
+
+                    const otherId = otherFile.id;
+
+                    if (otherId !== currFileId) {
+
+                        const funcArr = otherFile.functions;
+
+                        for (const func of funcArr) {
+
+                            const calledByArr = func.calledBy;
+
+                            for (const element of calledByArr) {
+
+                                let valueArr = whatKeyFileCalls.get(currFileId);
+
+                                if (!valueArr.includes(otherId) && element.id === currFileId) {
+
+                                    valueArr.push(otherId);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return whatKeyFileCalls;
+
+        }
+
+        // Make super map - sorted by type of relationship i.e. called from, calls to, and bi-directional.
+
+        let calledby = getFilesThatCallKeyFile(mockup);
+
+        let callsto = getWhatKeyFileCalls(mockup);
+
+        console.log(callsto);
+
+        let superMap = new Map();
+
+        for (const [key, value] of calledby.entries()) {
+
+            console.log(key);
+            
+            let callers = value;
+            let callees = callsto.get(key);
+
+            console.log(callers)
+
+            let spec = {
+                bidirectional: [],
+                calledby: [],
+                calls: []
+            }
+
+            for (const node of callers) {
+                
+                if (callees.includes(node)) {
+                    spec.bidirectional.push(node);
+                }
+            }
+
+            console.log(spec);
+        }
+
+        // Generate nodes/divs
+
+
+        // Attach endpoints
+        
+
 	});
 
 </script>

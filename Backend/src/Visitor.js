@@ -1,3 +1,5 @@
+import path from 'path';
+
 export default class Visitor {
     constructor(output, curFileID) {
         this.curFileID = curFileID;
@@ -5,31 +7,32 @@ export default class Visitor {
     }
 
     visitNodes(nodes, vars) { 
+        // Handle if we are given a second argument "vars", representing variables from higher levels of scope
+        // Additionally, copy this array of variables so that changes down this part of the tree won't propogate to other branches.
+        let variables = [];
+        if (typeof vars != "undefined") { variables = JSON.parse(JSON.stringify(vars)) } // Hack to pass a copy of the object (by value)
+
         // We do a first run through to identify variable declarations, also called "hoisting"
         // This is necessary to obtain proper scope and identify which methods are being called
         for (let node of nodes) {
             if (node.type == 'VariableDeclaration') {
-                this.visitVariableDeclaration(node, vars);
+                this.visitVariableDeclaration(node, variables);
             }
         }
 
         // Do a second pass for everything else
         for (let node of nodes) {
             if (node.type != 'VariableDeclaration') {
-                this.visitNode(node, vars); 
+                this.visitNode(node, variables); 
             }
         }
     }
 
-    visitNode(node, vars) {
-        // Handle if we are given a second argument "vars", representing variables from higher levels of scope
-        // Additionally, copy this array of variables so that changes won't propogate outside of this scope.
-        let variables = [];
-        if (typeof vars != "undefined") { variables = JSON.parse(JSON.stringify(vars)) } // Hack to pass a copy of the object (by value)
+    visitNode(node, variables) {
 
         // Dynamic dispatch for each node type in the AST
         switch (node.type) {
-            case 'Program': return this.visitProgram(node, variables);
+            case 'Program': return this.visitProgram(node);
             case 'ImportDeclaration': return this.visitImportDeclaration(node);
             case 'ExportNamedDeclaration': return this.visitExportNamedDeclaration(node);
             case 'FunctionDeclaration': return this.visitFunctionDeclaration(node, variables);
@@ -39,11 +42,12 @@ export default class Visitor {
             case 'CallExpression': return this.visitCallExpression(node, variables);
             case 'ClassDeclaration': return this.visitClassDeclaration(node, variables);
             case 'MethodDefinition': return this.visitMethodDefinition(node, variables);
+            case 'AssignmentExpression': return this.visitAssignmentExpression(node, variables);
         }
     }
 
-    visitProgram(node, vars) { 
-        this.visitNodes(node.body, vars);
+    visitProgram(node) { 
+        this.visitNodes(node.body);
     }
 
     visitVariableDeclaration(node, vars){
@@ -52,7 +56,7 @@ export default class Visitor {
         // Keeps track of variables, adds additional class key to object if initialized to new object.
         node.declarations.forEach(declaration => {
             let matchingVar = vars.findIndex(variable => {
-                variable.name == declaration.id.name;
+                return variable.name == declaration.id.name;
             });
             
             // Push a new "variable" object
@@ -84,9 +88,38 @@ export default class Visitor {
         });
     }
 
-    // TODO: Check here for imports, remember the file paths are relative, need to figure that out somehow
+    // Update the variable array with changes made (This is limited, static, check, not a compiler)
+    visitAssignmentExpression(node, variables){
+        if (node.left.type == "Identifier") {
+            variables.forEach(variable => {
+                if (variable.name == node.left.name) {
+                    variable.type = node.right.type;
+                    if (variable.type == "NewExpression"){
+                        variable["class"] = node.right.callee.name;
+                    }
+                }
+            });
+        } else {
+            console.log("Unhandled Expression, discarded");
+        }
+    }
+
+    // Match imports to their respective files, if not found, add information to temp file to try again later.
     visitImportDeclaration(node){
-        let fileObj = this.output.find(file => file.id == this.curFileID);
+        let curFileObj = this.output.find(file => { return file.id == this.curFileID });
+        let importPath = path.join(curFileObj.filePath, "..", node.source.value);
+        let importedFileObj = this.output.find(file => { return importPath == file.filePath });
+        if (importedFileObj) {
+            curFileObj.imports.push(importedFileObj.id);
+            importedFileObj.importedInFiles.push(this.curFileID);
+        } else {
+            let tempFileObj = this.output.find(file => { return file.id == "temp" });
+            let newTempObj = {
+                "filePath": importPath,
+                "importeeFileID": this.curFileID
+            }
+            tempFileObj.imports.push(newTempObj);
+        }
     }
 
     visitFunctionDeclaration(node, vars){
@@ -147,21 +180,25 @@ export default class Visitor {
     visitExpressionStatement(node, vars){ return this.visitNode(node.expression, vars) }
     
     visitCallExpression(node, vars){
-        let callParamCount, callName, callClass;
+        let callParamCount, callName, callClass, callType;
         callParamCount = node.arguments.length;
 
         // Handle function calls ( eg. call(x, y) )
         if (node.callee.type == "Identifier") {
             callName = node.callee.name;
+            callType = "Functional";
 
         // Handle method calls ( eg. variable.call(x, y) )
         } else if (node.callee.type == "MemberExpression") {
             callName = node.callee.property.name;
+            callType = "OOP";
             let objName = node.callee.object.name;
 
-            let obj = vars.find(variable => {variable.name == objName});
-            if (obj && obj.type == "NewExpression") {
-                callClass = obj.class;
+            let obj = vars.findIndex(variable => { return variable.name == objName});
+            if (obj != -1 && vars[obj].type == "NewExpression") {
+                callClass = vars[obj].class;
+            } else {
+                callClass = null;
             }
         } else {
             console.log("Unrecognized type in CallExpression");
@@ -171,7 +208,6 @@ export default class Visitor {
         let validFunctionFound = false;
         // Search each "file" object for the appropriate function that is being called
         // TODO: Make this only check the current file, and files that have been imported 
-        // TODO: Make this more accurate for method calls by checking the variables class
         this.output.forEach(file => {
             // Don't check our temp object, which is used to store calls that we can't match to functions yet
             if (file.id != "temp"){
@@ -217,6 +253,8 @@ export default class Visitor {
                         "id": this.curFileID,
                         "name": callName,
                         "paramCount": callParamCount,
+                        "type": callType,
+                        "className": callClass,
                         "atLineNum": [node.loc.start.line]
                     }
                     file.calls.push(tempObj);
@@ -231,6 +269,8 @@ export default class Visitor {
         this.class = node.id.name;
         this.visitNodes(node.body.body, vars);
         this.class = "";
+        // TODO: Extends
+
     }
 
     visitExportNamedDeclaration(node){}
