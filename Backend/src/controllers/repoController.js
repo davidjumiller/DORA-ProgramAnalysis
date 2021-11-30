@@ -5,6 +5,7 @@
 import download from 'download-git-repo';
 import { v4 as uuidv4 } from 'uuid';
 import { parseDir } from '../engine.js';
+import { rmSync } from 'fs';
 
 const repoController = {};
 
@@ -27,16 +28,17 @@ repoController.fetchRepo = async(req, res) => {
       res.code(400);
       res.send({
         'error': `Failed to download repo from the provided url ${url}. Make sure your repo is public and the link is correct.`,
-      })
+      });
     }
     else {
       console.log(`Success, the repo is saved at ${ dest }`);
-      const data = parseDir(dest);
+      const data = parseDir(dest, folderName);
+      rmSync(dest, {recursive: true});
       res.code(200);
       res.send({
         'msg': `Success, the repo is successfully parsed`,
         data
-      })
+      });
     }
   });
 }
