@@ -104,7 +104,7 @@ export default class Visitor {
         }
     }
 
-    // TODO: Check here for imports, remember the file paths are relative, need to figure that out somehow
+    // Match imports to their respective files, if not found, add information to temp file to try again later.
     visitImportDeclaration(node){
         let curFileObj = this.output.find(file => { return file.id == this.curFileID });
         let importPath = path.join(curFileObj.filePath, "..", node.source.value);
