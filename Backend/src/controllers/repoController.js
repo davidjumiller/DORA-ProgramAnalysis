@@ -32,14 +32,13 @@ repoController.fetchRepo = async(req, res) => {
     else {
       console.log(`Success, the repo is saved at ${ dest }`);
       parseDir(dest);
+      res.code(200);
+      res.send({
+        'msg': `Success, the repo is successfully parsed`,
+        'dest': dest
+      })
     }
   });
-
-  res.code(200);
-  res.send({
-    'msg': `Success, the repo is successfully parsed`,
-    'dest': dest
-  })
 }
 
 repoController.testRead = async(req, res) => {
