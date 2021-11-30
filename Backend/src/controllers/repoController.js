@@ -31,11 +31,11 @@ repoController.fetchRepo = async(req, res) => {
     }
     else {
       console.log(`Success, the repo is saved at ${ dest }`);
-      parseDir(dest);
+      const data = parseDir(dest);
       res.code(200);
       res.send({
         'msg': `Success, the repo is successfully parsed`,
-        'dest': dest
+        data
       })
     }
   });

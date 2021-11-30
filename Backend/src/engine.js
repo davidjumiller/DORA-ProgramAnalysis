@@ -129,6 +129,8 @@ export const parseDir = (pathName) => {
             console.log("done write");
         }
     });
+
+    return objArrayOutput;
 }
 
 const getDepsForFile = (repoPath) => {
