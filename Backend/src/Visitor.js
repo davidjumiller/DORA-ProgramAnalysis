@@ -99,10 +99,19 @@ export default class Visitor {
     visitAssignmentExpression(node, variables){
         // Handles the case of eg. example = () => {}
         if (node.right.type == "ArrowFunctionExpression") {
-            let newMethod = this.buildFunctionObj(node.right.params, node.left.property.name, node.loc.start.line, node.loc.end.line);
-            newMethod["type"] = "OOP";
-            newMethod["className"] = node.left.object.name;
-            this.pushToFileObj(newMethod);
+
+            // This builds the function name
+            let funcName = "";
+            let nodeTemp = node.left;
+            while (nodeTemp.object) {
+                funcName = "." + nodeTemp.property.name + funcName;
+                nodeTemp = nodeTemp.object;
+            }
+            funcName = nodeTemp.name + funcName;
+
+            let newFunction = this.buildFunctionObj(node.right.params, funcName, node.loc.start.line, node.loc.end.line);
+            newFunction["type"] = "Functional";
+            this.pushToFileObj(newFunction);
             this.visitArrowFunctionExpression(node.right, variables);
         }
         // Handles tracking regular variables if they are assigned a class object
