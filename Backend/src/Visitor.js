@@ -4,6 +4,7 @@ export default class Visitor {
     constructor(output, curFileID) {
         this.curFileID = curFileID;
         this.output = output;
+        this.temp = output.find(file => { return file.id == "temp" });
     }
 
     visitNodes(nodes, vars) { 
@@ -126,12 +127,11 @@ export default class Visitor {
             curFileObj.imports.push(importedFileObj.id);
             importedFileObj.importedInFiles.push(this.curFileID);
         } else {
-            let tempFileObj = this.output.find(file => { return file.id == "temp" });
             let newTempObj = {
                 "filePath": importPath,
                 "importeeFileID": this.curFileID
             }
-            tempFileObj.imports.push(newTempObj);
+            this.temp.imports.push(newTempObj);
         }
     }
 
@@ -218,61 +218,22 @@ export default class Visitor {
             return;
         }
 
-        let validFunctionFound = false;
-        // Search each "file" object for the appropriate function that is being called
-        // TODO: Make this only check the current file, and files that have been imported. To improve performance 
-        this.output.forEach(file => {
-            // Don't check our temp object, which is used to store calls that we can't match to functions yet
-            if (file.id != "temp"){
-                file.functions.forEach(func => {
-                    // Check if the function/method matches the calls name, number of parameters, and class
-                    if (func.name == callName 
-                        && func.paramCount == callParamCount 
-                        && (!callClass || callClass == func.className)) {
-                        validFunctionFound = true;
-                        // Check if this function has been called in this file already, if so, increment countRef,
-                        // and add the line number
-                        let calledBefore = false;
-                        func.calledBy.forEach(call => {
-                            if (call.id == this.curFileID){
-                                call.countRefs++;
-                                call.atLineNum.push(node.loc.start.line);
-                                calledBefore = true;
-                            }
-                        });
-                        // If no calls to the function from our current file are found, create a new object and push
-                        if (calledBefore == false){
+        let tempObj = {
+            "id": this.curFileID,
+            "name": callName,
+            "paramCount": callParamCount,
+            "type": callType,
+            "className": callClass,
+            "atLineNum": [node.loc.start.line]
+        }
 
-                            let calledByObj = {
-                                "id": this.curFileID,
-                                "atLineNum": [node.loc.start.line],
-                                "countRefs": 1
-                            }
-                            func.calledBy.push(calledByObj);
-                        } else {
-                        }
-                    }
-                })
-            }
-        });
+        let validFunctionFound = matchCall(this.output, tempObj);
 
         /** If we can't find the matching function to this call, the file 
          *  where this function resides might not have been parsed yet. 
          *  Store it for later and try again after all files are read through. */
         if (validFunctionFound == false) {
-            this.output.forEach(file => {
-                if (file.id == "temp") {
-                    let tempObj = {
-                        "id": this.curFileID,
-                        "name": callName,
-                        "paramCount": callParamCount,
-                        "type": callType,
-                        "className": callClass,
-                        "atLineNum": [node.loc.start.line]
-                    }
-                    file.calls.push(tempObj);
-                }
-            });
+            this.temp.calls.push(tempObj);
         }
 
         // Additionally, visit any nodes that may be in the arguments area (eg. example(func => { console.log() }))
@@ -283,9 +244,11 @@ export default class Visitor {
     visitClassDeclaration(node, vars){
         // Allows us to label any functions found as children of this node are actually methods of this class
         this.class = node.id.name;
+        if (node.superClass) {
+            this.temp.extends[this.class] = node.superClass.name;
+        }
         this.visitNodes(node.body.body, vars);
         this.class = "";
-        // TODO: Extends
 
     }
 
@@ -293,4 +256,59 @@ export default class Visitor {
     visitIdentifier(node){ return node.name; }
 
     visitLiteral(node){/* Do nothing for now */};
+}
+
+// Helper function that matches a call to its method/function as accurately as possible
+export function matchCall(jsonOutput, callObj){
+    let matched = false;
+    // Search each "file" object for the appropriate function that is being called
+    // TODO: Make this only check the current file, and files that have been imported. To improve performance 
+    jsonOutput.forEach(file => {
+        // Don't check our temp object, which is used to store calls that we can't match to functions yet
+        if (file.id != "temp"){
+            file.functions.forEach(func => {
+                // Check if the function/method matches the calls name, number of parameters, and class
+                if (func.name == callObj.name 
+                    && func.paramCount == callObj.paramCount 
+                    && (!callObj.className || callObj.className == func.className)) {
+                    // Check if this function has been called in this file already, if so, increment countRef,
+                    // and add the line number
+                    let calledBefore = false;
+                    func.calledBy.forEach(call => {
+                        if (call.id == callObj.id){
+                            call.countRefs++;
+                            call.atLineNum.push(callObj.atLineNum);
+                            calledBefore = true;
+                        }
+                    });
+                    // If no calls to the function from our current file are found, create a new object and push
+                    if (calledBefore == false){
+                        let calledByObj = {
+                            "id": callObj.id,
+                            "atLineNum": callObj.atLineNum,
+                            "countRefs": 1
+                        }
+                        func.calledBy.push(calledByObj);
+                    }
+                    matched = true;
+                }
+            })
+        }
+    });
+    
+    // Checks parent's class methods if matching method in instantiated class can't be found
+    let temp = jsonOutput.find(file => { return file.id == "temp" });
+    let superClass = temp.extends[callObj.className];
+    if (superClass && matched == false) {
+        let newObj = {
+            "id": callObj.id,
+            "name": callObj.name,
+            "paramCount": callObj.paramCount,
+            "type": callObj.type,
+            "className": superClass,
+            "atLineNum": callObj.atLineNum
+        }
+        return matchCall(jsonOutput, newObj);
+    }
+    return matched;
 }

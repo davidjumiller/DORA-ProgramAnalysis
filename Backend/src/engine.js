@@ -1,7 +1,7 @@
 import * as acorn from 'acorn';
 import fs, { readFile } from 'fs';
 import path from 'path';
-import Visitor from './Visitor.js';
+import Visitor, { matchCall } from './Visitor.js';
 
 // Async read js file from input directory
 export const readIndividualFile = (objArrayOutput, pathName, fileID, repoID) => {
@@ -64,7 +64,8 @@ export const parseDir = (pathName, repoID) => {
     let tempObj = {
         "id": "temp",
         "calls": [],
-        "imports": []
+        "imports": [],
+        "extends": {}
     }
 
     objArrayOutput.push(tempObj);
@@ -91,33 +92,7 @@ export const parseDir = (pathName, repoID) => {
     });
     // Final matching for calls
     objArrayOutput[tempIndex].calls.forEach(call => {
-        objArrayOutput.forEach(file => {
-            if (file.id != "temp") {
-                file.functions.forEach(func => {
-                    // Find the function/method that matches the call
-                    if (call.name == func.name 
-                        && call.paramCount == func.paramCount 
-                        && (call.type == "Functional" || (call.type == "OOP" && call.className == func.className))) {
-                            /** Check if this function has been called already and has an existing object in the 
-                                *  output, if so, increase countRef, otherwise create a new object to push */
-                            let calledAlready = func.calledBy.findIndex(existingCalledBy => {
-                                existingCalledBy.id == call.id;
-                            });
-                            if (calledAlready == -1) {
-                                let newCalledBy = {
-                                    "id": call.id,
-                                    "atLineNum": call.atLineNum,
-                                    "countRefs": 1
-            
-                                }
-                                func.calledBy.push(newCalledBy);
-                            } else {
-                                func.calledBy[calledAlready].countRefs++;
-                            }
-                    }
-                });
-            }
-        });
+        matchCall(objArrayOutput, call);
     });
 
     // Remove "temp" obj from the array
@@ -142,4 +117,4 @@ const getDepsForFile = (repoPath) => {
     */
 }
 
-// parseDir("./src/inputs");
+parseDir("./src/inputs");
