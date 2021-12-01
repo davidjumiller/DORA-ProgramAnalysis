@@ -128,7 +128,7 @@ List of ideas being considered:
 
  - Visualization changes were made, we originally intended to have an arrow going from every call to every callee, but this would end up being a lot of arrows. For less clutter we have arrows only between each file with additional information on click.
 
-- Further added a sidebar with the ability to hide the modules contained in a certain directory to help the user navigate the visualization better and reduce visual overload is being considered.
+- Further, a sidebar with the ability to hide the modules contained in a certain directory to help the user navigate the visualization better and reduce visual overload is being considered.
 
 ## Progress so far
 

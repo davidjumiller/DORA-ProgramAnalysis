@@ -2,18 +2,32 @@
 
 (Diagrammatic Observed Relationship Analyser)
 
-Deployment Details: {will be added shortly}
+
+Deployment Details: <a href="https://dora-rho.vercel.app/"> Demo Link </a>
+
 
 ## Context
 This project is aimed at building a tool that helps visualise a JavaScript application to aid in understanding a program and further identifying redundant code.
 The project works with both functional and oop-style code with support for class inhieritance. It is ideal for visualising small to mid-sized projects.
 
-## Usage
+## Usage & Limitations
 
-Our programmer analyzer statically analyzes JavaScript (JS) files in a repo and generates relationship diagram from the static analysis. To generate an analysis for a repo of your choice, copy & paste the GitHub link to the selected repo to the input textbox and hit the analyse button. For the analysis to work properly, the repo for analysis must satisfy the following restrictions:
+Our programmer analyzer statically analyzes JavaScript (JS) files in a repo and generates relationship diagram from the static analysis. 
+
+To generate an analysis for a repo of your choice, copy & paste the GitHub link to the selected repo to the input textbox and hit the analyse button. Nodes on the diagram can be clicked to reveal more information about the relationship of a file, its functions and generate call graph for a particular function. 
+
+For the analysis to work properly, the repo for analysis must satisfy the following restrictions:
+
 * The repo must be published on GitHub (not GitHub Enterprise) as a public repo.
+
 * Any file ending in strictly .js (excluding files ending in *.min.js, *.d.js, etc.) must contain plain JS code (e.g. JS files that contain React components are not supported for analysis) that follow the syntax of the latest "stage 4" (i.e. finalized) ECMAScript.
-* All JS files must be written as JS modules (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules - modules_and_classes). In particular, they should not contain any code that results in errors under the "strict mode" (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode). For example, any line that attempts to delete a variable will result in an error from the underlying AST generator used by this program analyzer.
+
+* All JS files must be written as JS modules (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules - modules_and_classes). In particular, they should not contain any code that results in errors under the "strict mode" (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode). For example, any line that attempts to delete a variable will result in an error from the underlying AST generator used by this program analyzer (acorn.js).
+
+
+Examples of compatible repos:
+* https://github.com/giovanimdelcol/pirpleassignment4
+* https://github.com/giovanimdelcol/pirpleassignment3
 
 ## Final User Studies
 Users (Both JavaScript Developers): Attempt to analyse at least one JavaScript repository of your choice, conforming to ‘strict mode’ requirements. Comment on the usefulness and accuracy of the tool.
