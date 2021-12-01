@@ -57,6 +57,7 @@ export default class Visitor {
             case 'SwitchStatement': return this.visitSwitchStatement(node, variables);
             case 'SwitchCase': return this.visitSwitchCase(node, variables);
             case 'NewExpression': return this.visitNewExpression(node, variables);
+            case 'FunctionExpression': return this.visitFunctionExpression(node, variables);
         }
     }
 
@@ -134,9 +135,8 @@ export default class Visitor {
                 }
                 if (type == "NewExpression") {
                     variable["class"] = declaration.init.callee.name;
-                } else if (type == "CallExpression") {
-                    this.visitCallExpression(declaration.init, vars);
                 }
+                this.visitNode(declaration.init, vars);
                 vars.push(variable);
 
             /** Edit an existing "variable" object. This handles the case where
@@ -168,7 +168,7 @@ export default class Visitor {
             let newFunction = this.buildFunctionObj(node.right.params, funcName, node.loc.start.line, node.loc.end.line);
             newFunction["type"] = "Functional";
             this.pushToFileObj(newFunction);
-            this.visitArrowFunctionExpression(node.right, variables);
+            this.visitNode(node.right, variables);
         }
         // Handles tracking regular variables if they are assigned a class object
         else if (node.left.type == "Identifier") {
@@ -190,6 +190,10 @@ export default class Visitor {
     }
 
     visitArrowFunctionExpression(node, vars){
+        this.visitNode(node.body, vars);
+    }
+
+    visitFunctionExpression(node, vars){
         this.visitNode(node.body, vars);
     }
 
