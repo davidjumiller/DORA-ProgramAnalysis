@@ -51,4 +51,20 @@ repoController.testRead = async(req, res) => {
   });
 }
 
+repoController.parseLocal = async(req, res) => {
+  try {
+    const data = parseDir(req.body.path, req.body.folderName);
+    res.code(200);
+    res.send({
+      'msg': 'Success, the local repo is successfully parsed',
+      data
+    });
+  } catch (error) {
+    res.code(500);
+    res.send({
+      'err': `Error: failed to parse the local repo ${error?.message || error}`
+    });
+  }
+}
+
 export default repoController;

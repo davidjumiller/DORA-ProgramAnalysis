@@ -12,6 +12,12 @@ const routes = [
     url: '/v1/parse',
     handler: repoController.fetchRepo
   },
+
+  {
+    method: 'POST',
+    url: '/v1/parseLocal',
+    handler: repoController.parseLocal
+  }
 ]
 
 export default routes;
