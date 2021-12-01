@@ -1,6 +1,6 @@
 <script>
 
-    import { onMount } from 'svelte';
+    import { afterUpdate, onMount } from 'svelte';
 	import panzoom from "panzoom";
 
     import * as jsPlumbBrowserUI from "@jsplumb/browser-ui";
@@ -11,9 +11,10 @@
 
     let repoURL = "";
     
+    let toggleInput = true;
     let mockup = [];
 
-    const fetchRepo = () => {
+    const fetchRepo = async() => {
 
         if (repoURL == "") {
             alert("Invalid URL");
@@ -25,8 +26,14 @@
             },
                 "body": `{"url":"${repoURL}"}`
             })
-            .then(response => {
-                mockup = response.data;
+            .then(async(response) => {
+                let body = await response.json();
+                mockup = body.data;
+                console.log(mockup)
+                calledby = getFileMetadata(mockup);
+                filesMap = sortDataByDirectory(mockup);
+                filesArray = Array.from(filesMap);
+                toggleInput = false;
             })
             .catch(err => {
                 alert(repoURL);
@@ -126,16 +133,20 @@
     let filesArray = [];
 
     let listingModal = {};
-    listingModal.data = null;
+    listingModal.data = {};
+    listingModal.data.importedIn = [];
+    listingModal.data.imports = [];
+    listingModal.data.name = null;
     listingModal.isVisible = false;
     listingModal.toggle = (e = null) => {
         listingModal.isVisible = !listingModal.isVisible;
-        let data = calledby.get(parseInt(e.target.id.split('').pop()));
+        let data = calledby.get(e);
+        console.log(data);
         listingModal.data =  data;
     }
 
     let usageModal = {};
-    usageModal.data = null;
+    usageModal.data = {};
     usageModal.inFileName = null;
     usageModal.ofFileName = null;
     usageModal.isVisible = false;
@@ -152,53 +163,52 @@
         usageModal.isVisible = false;
     }
 
-    onMount(() => {
-
-		let zoomableElement = document.querySelector('.zoomable');
-        panzoom(zoomableElement);
+    const build = () => {
 
         const instance = jsPlumbBrowserUI.newInstance({
             container: document.querySelector('#diagram'),
             elementsDraggable: false
         })
 
-        calledby = getFileMetadata(mockup);
-        filesMap = sortDataByDirectory(mockup);
-        filesArray = Array.from(filesMap);
+        if (calledby != null) {
+            for (const [key, values] of calledby.entries()) {
 
-        for (const [key, values] of calledby.entries()) {
+                for (let value of values.imports) {
 
-            for (let value of values.imports) {
-
-                if (value != key) {
-                    console.log(`${value} - ${key}`)
-                    instance.connect({
-                        source: document.querySelector(`#file_${value}`),
-                        target: document.querySelector(`#file_${key}`),
-                        detachable: false,
-                        anchor:"Continuous",
-                        connector: {
-                            type: FlowchartConnector.type,
-                            options: {
-                                alwaysRespectStubs: false,
-                                cornerRadius: 5
-                            }
-                        },
-                        overlays:[ 
-                            { type:"Arrow", options:{location:1}}
-                        ],
-                        endpoints: ["Dot", "Blank"]
-                    })
+                    if (value != key) {
+                        console.log(`${value} - ${key}`)
+                        instance.connect({
+                            source: document.querySelector(`#file_${value}`),
+                            target: document.querySelector(`#file_${key}`),
+                            detachable: false,
+                            anchor:"Continuous",
+                            connector: {
+                                type: FlowchartConnector.type,
+                                options: {
+                                    alwaysRespectStubs: false,
+                                    cornerRadius: 5
+                                }
+                            },
+                            overlays:[ 
+                                { type:"Arrow", options:{location:1}}
+                            ],
+                            endpoints: ["Dot", "Blank"]
+                        })
+                    }
+                    
                 }
-                
+
             }
-            
         }
+    }
 
-        // Generate nodes/divs
+    afterUpdate(() => {
+        build();
+    })
+    onMount(() => {
 
-        // Attach endpoints
-        
+		let zoomableElement = document.querySelector('.zoomable');
+        panzoom(zoomableElement);
 
 	});
 
@@ -215,6 +225,7 @@
     </div>
 </header>
 
+{#if toggleInput}
 <div class="modal is-active">
     <div class="modal-background"></div>
     <div class="modal-content">
@@ -227,7 +238,7 @@
         </div>
     </div>
   </div>
-
+{/if}
 {#if usageModal.isVisible}
     <div class="modal is-active">
         <div class="modal-background"></div>
@@ -297,7 +308,7 @@
 
         {#each filesArray as dir, y}
             {#each dir[1] as file, x}
-                <div id="file_{file.id}" class="node" style="top: {175 + (x * 150)}px; left: {142 + (y * 300)}px;" on:click={(e) => {listingModal.toggle(e)}}> <p> {file.filePath} </p> </div>
+                <div id="file_{file.id}" class="node" style="top: {175 + (x * 150)}px; left: {142 + (y * 300)}px;" on:click={() => {listingModal.toggle(file.id)}}> <p> {file.filePath} </p> </div>
             {/each}
 	    {/each}
 

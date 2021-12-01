@@ -19,6 +19,7 @@
     "acorn": "^8.5.0",
     "download-git-repo": "^3.0.2",
     "fastify": "^3.23.1",
+    "fastify-cors": "^6.0.2",
     "fs": "0.0.1-security",
     "uuid": "^8.3.2"
   },
