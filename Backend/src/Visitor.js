@@ -147,28 +147,36 @@ export default class Visitor {
                     vars[matchingVar].class = declaration.init.callee.name;
                 }
             }
+            if (declaration.init.type === "ArrowFunctionExpression" || declaration.init.type === "FunctionExpression") {
+                this.functionExpressionHelper(declaration.init, declaration.id);
+            }
             this.visitNode(declaration.init, vars);
         });
     }
+
+    functionExpressionHelper(node, identifier){
+        // This builds the function name
+        let funcName = "";
+        let nodeTemp = identifier;
+        while (nodeTemp.object) {
+            funcName = "." + nodeTemp.property.name + funcName;
+            nodeTemp = nodeTemp.object;
+        }
+        funcName = nodeTemp.name + funcName;
+
+        let newFunction = this.buildFunctionObj(node.params, funcName, node.loc.start.line, node.loc.end.line);
+        newFunction["type"] = "Functional";
+        this.pushToFileObj(newFunction);
+    }
+
 
     // Update the variable array with changes made (This is limited, static, check, not a compiler)
     visitAssignmentExpression(node, variables){
         // Handles the case of eg. example = () => {}
         if (node.right.type == "ArrowFunctionExpression" || node.right.type == "FunctionExpression") {
 
-            // This builds the function name
-            let funcName = "";
-            let nodeTemp = node.left;
-            while (nodeTemp.object) {
-                funcName = "." + nodeTemp.property.name + funcName;
-                nodeTemp = nodeTemp.object;
-            }
-            funcName = nodeTemp.name + funcName;
+            this.functionExpressionHelper(node.right, node.left);
 
-            let newFunction = this.buildFunctionObj(node.right.params, funcName, node.loc.start.line, node.loc.end.line);
-            newFunction["type"] = "Functional";
-            this.pushToFileObj(newFunction);
-            this.visitNode(node.right, variables);
         }
         // Handles tracking regular variables if they are assigned a class object
         else if (node.left.type == "Identifier") {
