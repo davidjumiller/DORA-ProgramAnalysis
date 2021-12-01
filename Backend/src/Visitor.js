@@ -58,8 +58,6 @@ export default class Visitor {
     }
 
     visitVariableDeclaration(node, vars){
-        // TODO: Check here for require statements, track them as imports
-
         // Keeps track of variables, adds additional class key to object if initialized to new object.
         node.declarations.forEach(declaration => {
             let matchingVar = vars.findIndex(variable => {
@@ -99,7 +97,16 @@ export default class Visitor {
 
     // Update the variable array with changes made (This is limited, static, check, not a compiler)
     visitAssignmentExpression(node, variables){
-        if (node.left.type == "Identifier") {
+        // Handles the case of eg. example = () => {}
+        if (node.right.type == "ArrowFunctionExpression") {
+            let newMethod = this.buildFunctionObj(node.right.params, node.left.property.name, node.loc.start.line, node.loc.end.line);
+            newMethod["type"] = "OOP";
+            newMethod["className"] = node.left.object.name;
+            this.pushToFileObj(newMethod);
+            this.visitArrowFunctionExpression(node.right, variables);
+        }
+        // Handles tracking regular variables if they are assigned a class object
+        else if (node.left.type == "Identifier") {
             variables.forEach(variable => {
                 if (variable.name == node.left.name) {
                     variable.type = node.right.type;
@@ -108,8 +115,9 @@ export default class Visitor {
                     }
                 }
             });
+        // Handles object assignment
         } else if (node.left.type == "MemberExpression") {
-            // Not currently supported, (eg. example.name = 1;)
+            // Currently not currently supported, (eg. example.name = 1;)
         } else {
             console.log("Unhandled Expression, '" + node.left.type + "' discarded");
         }
