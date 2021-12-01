@@ -58,6 +58,7 @@ export default class Visitor {
             case 'SwitchCase': return this.visitSwitchCase(node, variables);
             case 'NewExpression': return this.visitNewExpression(node, variables);
             case 'FunctionExpression': return this.visitFunctionExpression(node, variables);
+            case 'IfStatement': return this.visitIfStatement(node, variables);
         }
     }
 
@@ -84,6 +85,11 @@ export default class Visitor {
     visitIdentifier(node){ return node.name; }
 
     visitLiteral(node){ return };
+
+    visitIfStatement(node, vars){ 
+        this.visitNode(node.test, vars);
+        this.visitNode(node.consequent, vars);
+    };
 
     visitTryStatement(node, vars){
         this.visitNode(node.block, vars);
@@ -210,7 +216,7 @@ export default class Visitor {
     importRequireHelper(relPath) {
         let curFileObj = this.output.find(file => { return file.id === this.curFileID });
         let importPath = path.join(curFileObj.filePath, "..", relPath);
-        let importedFileObj = this.output.find(file => { return importPath === file.filePath });
+        let importedFileObj = this.output.find(file => { return (importPath === file.filePath || importPath + ".js" == file.filePath) });
         if (importedFileObj) {
             curFileObj.imports.push(importedFileObj.id);
             importedFileObj.importedInFiles.push(this.curFileID);
