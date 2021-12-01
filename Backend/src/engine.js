@@ -84,7 +84,7 @@ export const parseDir = (pathName, repoID) => {
     objArrayOutput[tempIndex].imports.forEach(imp => {
         let importeeFileObj = objArrayOutput.find(file => { return file.id == imp.importeeFileID});
         objArrayOutput.forEach(file => {
-            if (imp.filePath == file.filePath) {
+            if (imp.filePath == file.filePath || imp.filePath + ".js" == file.filePath) {
                 importeeFileObj.imports.push(file.id);
                 file.importedInFiles.push(imp.importeeFileID);
             }
