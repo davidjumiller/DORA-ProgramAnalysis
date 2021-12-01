@@ -59,6 +59,7 @@ export default class Visitor {
             case 'NewExpression': return this.visitNewExpression(node, variables);
             case 'FunctionExpression': return this.visitFunctionExpression(node, variables);
             case 'IfStatement': return this.visitIfStatement(node, variables);
+            case 'DoWhileStatement': return this.visitDoWhileStatement(node, variables);
         }
     }
 
@@ -85,6 +86,11 @@ export default class Visitor {
     visitIdentifier(node){ return node.name; }
 
     visitLiteral(node){ return };
+
+    visitDoWhileStatement(node, vars){
+        this.visitNode(node.body, vars);
+        this.visitNode(node.test, vars);
+    }
 
     visitIfStatement(node, vars){ 
         this.visitNode(node.test, vars);
