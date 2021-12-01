@@ -307,7 +307,7 @@ export function matchCall(jsonOutput, callObj){
                     func.calledBy.forEach(call => {
                         if (call.id == callObj.id){
                             call.countRefs++;
-                            call.atLineNum.push(callObj.atLineNum);
+                            call.atLineNum = call.atLineNum.concat(callObj.atLineNum);
                             calledBefore = true;
                         }
                     });
