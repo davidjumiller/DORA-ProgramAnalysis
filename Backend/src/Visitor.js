@@ -61,21 +61,29 @@ export default class Visitor {
         }
     }
 
-    visitProgram(node) { 
-        this.visitNodes(node.body);
-    }
+    visitProgram(node) { this.visitNodes(node.body) }
 
-    visitBlockStatement(node, vars){
-        this.visitNodes(node.body, vars);
-    }
+    visitBlockStatement(node, vars){ this.visitNodes(node.body, vars) }
 
-    visitExportNamedDeclaration(node, vars){
-        this.visitNode(node.declaration, vars);
-    }
+    visitExportNamedDeclaration(node, vars){ this.visitNode(node.declaration, vars) }
 
-    visitExportDefaultDeclaration(node, vars){
-        this.visitNode(node.declaration, vars);
-    }
+    visitExportDefaultDeclaration(node, vars){ this.visitNode(node.declaration, vars) }
+
+    visitNewExpression(node, vars){ this.visitNodes(node.arguments, vars) }
+    
+    visitArrowFunctionExpression(node, vars){ this.visitNode(node.body, vars) }
+
+    visitFunctionExpression(node, vars){ this.visitNode(node.body, vars) }
+
+    visitImportDeclaration(node){ this.importRequireHelper(node.source.value) }
+
+    visitExpressionStatement(node, vars){ this.visitNode(node.expression, vars) }
+    
+    visitExportNamedDeclaration(node){ return }
+
+    visitIdentifier(node){ return node.name; }
+
+    visitLiteral(node){ return };
 
     visitTryStatement(node, vars){
         this.visitNode(node.block, vars);
@@ -108,10 +116,6 @@ export default class Visitor {
     visitSwitchCase(node, vars){
         this.visitNode(node.test, vars);
         this.visitNodes(node.consequent, vars);
-    }
-
-    visitNewExpression(node, vars){
-        this.visitNodes(node.arguments, vars);
     }
 
     visitVariableDeclaration(node, vars){
@@ -197,19 +201,6 @@ export default class Visitor {
         this.visitNode(node.right, variables);
     }
 
-    visitArrowFunctionExpression(node, vars){
-        this.visitNode(node.body, vars);
-    }
-
-    visitFunctionExpression(node, vars){
-        this.visitNode(node.body, vars);
-    }
-
-    // Match imports to their respective files, if not found, add information to temp file to try again later.
-    visitImportDeclaration(node){
-        this.importRequireHelper(node.source.value);
-    }
-
     importRequireHelper(relPath) {
         let curFileObj = this.output.find(file => { return file.id === this.curFileID });
         let importPath = path.join(curFileObj.filePath, "..", relPath);
@@ -280,8 +271,6 @@ export default class Visitor {
 
         return newFunction;
     }
-
-    visitExpressionStatement(node, vars){ return this.visitNode(node.expression, vars) }
     
     visitCallExpression(node, vars){
         let callParamCount, callName, callClass, callType;
@@ -355,11 +344,6 @@ export default class Visitor {
         this.class = "";
 
     }
-
-    visitExportNamedDeclaration(node){}
-    visitIdentifier(node){ return node.name; }
-
-    visitLiteral(node){/* Do nothing for now */};
 }
 
 // Helper function that matches a call to its method/function as accurately as possible
@@ -369,7 +353,7 @@ export function matchCall(jsonOutput, callObj){
     // TODO: Make this only check the current file, and files that have been imported. To improve performance 
     jsonOutput.forEach(file => {
         // Don't check our temp object, which is used to store calls that we can't match to functions yet
-        if (file.id !== "temp"){
+        if (file.id !== "temp" && (file.importedInFiles.includes(callObj.id) || file.id == callObj.id)){
             file.functions.forEach(func => {
                 // Check if the function/method matches the calls name, number of parameters, and class
                 if (func.name === callObj.name 
