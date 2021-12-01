@@ -136,7 +136,6 @@ export default class Visitor {
                 if (type == "NewExpression") {
                     variable["class"] = declaration.init.callee.name;
                 }
-                this.visitNode(declaration.init, vars);
                 vars.push(variable);
 
             /** Edit an existing "variable" object. This handles the case where
@@ -148,6 +147,7 @@ export default class Visitor {
                     vars[matchingVar].class = declaration.init.callee.name;
                 }
             }
+            this.visitNode(declaration.init, vars);
         });
     }
 
