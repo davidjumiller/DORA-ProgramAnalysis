@@ -117,4 +117,4 @@ const getDepsForFile = (repoPath) => {
     */
 }
 
-parseDir("./src/inputs");
+// parseDir("./src/inputs");

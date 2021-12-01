@@ -78,8 +78,10 @@ export default class Visitor {
                     "name": declaration.id.name,
                     "type": type
                 }
-                if (declaration.init == "NewExpression") {
+                if (type == "NewExpression") {
                     variable["class"] = declaration.init.callee.name;
+                } else if (type == "CallExpression") {
+                    this.visitCallExpression(declaration.init, vars);
                 }
                 vars.push(variable);
 
@@ -120,8 +122,12 @@ export default class Visitor {
 
     // Match imports to their respective files, if not found, add information to temp file to try again later.
     visitImportDeclaration(node){
+        this.importRequireHelper(node.source.value);
+    }
+
+    importRequireHelper(relPath) {
         let curFileObj = this.output.find(file => { return file.id == this.curFileID });
-        let importPath = path.join(curFileObj.filePath, "..", node.source.value);
+        let importPath = path.join(curFileObj.filePath, "..", relPath);
         let importedFileObj = this.output.find(file => { return importPath == file.filePath });
         if (importedFileObj) {
             curFileObj.imports.push(importedFileObj.id);
@@ -200,6 +206,12 @@ export default class Visitor {
         if (node.callee.type == "Identifier") {
             callName = node.callee.name;
             callType = "Functional";
+
+            // Handle require statements
+            if (callName == "require") {
+                this.importRequireHelper(node.arguments[0].value);
+                return;
+            }
 
         // Handle method calls ( eg. variable.call(x, y) )
         } else if (node.callee.type == "MemberExpression") {
