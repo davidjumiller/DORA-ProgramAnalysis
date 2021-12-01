@@ -63,3 +63,17 @@ button:not(:disabled):active {
 button:focus {
 	border-color: #666;
 }
+
+svg {
+	z-index: -1;
+}
+
+.jtk-hover :first-child{
+	stroke: #1C85E7 !important;
+	stroke-width: 3.5;
+}
+
+.jtk-hover .jtk-overlay{
+	fill:#1C85E7 !important;
+	stroke: #1C85E7 !important;
+}
