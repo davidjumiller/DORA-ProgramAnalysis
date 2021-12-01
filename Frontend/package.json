@@ -22,6 +22,7 @@
     "@jsplumb/connector-bezier": "^5.2.0",
     "@jsplumb/connector-flowchart": "^5.2.0",
     "panzoom": "^9.4.2",
-    "sirv-cli": "^1.0.0"
+    "sirv-cli": "^1.0.0",
+    "treant-js": "^1.0.1"
   }
 }

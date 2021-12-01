@@ -6,9 +6,6 @@
     import * as jsPlumbBrowserUI from "@jsplumb/browser-ui";
     import { FlowchartConnector } from "@jsplumb/connector-flowchart";
 
-    // Mockup data
-
-
     let repoURL = "";
     
     let toggleInput = true;
@@ -44,6 +41,10 @@
 
     }
 
+    const buildCallGraph = (ofFile, signature) => {
+        let struc = getCallHierarchy(ofFile, signature, mockup);
+    }
+
     const sortDataByDirectory = (files) => {
 
         let sortedData = new Map();
@@ -76,6 +77,137 @@
 
         return sortedData;
     }
+
+    const getCallHierarchy = (fileId, signature, json) => {
+        console.log(fileId);
+        console.log(signature);
+        console.log(json);
+        let file;
+        for (const jsonElement of json) {
+            if (jsonElement.id === fileId) {
+            file = jsonElement;
+            break;
+            }
+        }
+
+        if (file === undefined) {
+            throw new Error("Cannot find file Id");
+        }
+
+        let theFunc;
+        const funcArr = file.functions;
+
+        for (const func of funcArr) {
+            if (func.signature === signature) {
+            theFunc = func;
+            break;
+            }
+        }
+
+        if (theFunc === undefined) {
+            throw new Error("Cannot find the function");
+        }
+
+        let output = {};
+        output.displayName = signature;
+        output.type = theFunc.type;
+        output.fileId = fileId;
+        output.calledBy = [];
+
+        for (const calledByElement of theFunc.calledBy) {
+            let calledByFunc = findCallingFunc(calledByElement.id, calledByElement.atLineNum, json, [signature]);
+            if (typeof(calledByFunc) !== "string") {
+            if (output.calledBy.length === 0) {
+                output.calledBy = calledByFunc;
+            } else {
+                output.calledBy = output.calledBy.concat(calledByFunc);
+            }
+            } else {
+            let loopBack = {};
+            loopBack.displayName = calledByFunc + "[loop back]";
+            loopBack.type = null;
+            loopBack.fileId = null;
+            loopBack.calledBy = null;
+            output.calledBy.push(loopBack);
+            }
+        }
+
+        console.log(output);
+        return output;
+    }
+
+    const findCallingFunc = (fileId, lineNumArr, json, visited) => {
+        let file;
+        for (const jsonElement of json) {
+            if (jsonElement.id === fileId) {
+            file = jsonElement;
+            break;
+            }
+        }
+
+        if (file === undefined) {
+            throw new Error("Cannot find file Id");
+        }
+
+        let functionsCalling = [];
+
+        let linesWithFunction = [];
+
+        const funcArr = file.functions;
+        for (const func of funcArr) {
+            const start = func.startLine;
+            const end = func.endLine;
+
+            for (const lineNumArrElement of lineNumArr) {
+            if (start <= lineNumArrElement && lineNumArrElement <= end) {
+
+                linesWithFunction.push(lineNumArrElement)
+
+                if (visited.includes(func.signature)) {
+                return func.signature;
+                }
+
+                let theFunc = {};
+                theFunc.displayName = func.signature;
+                theFunc.type = func.type;
+                theFunc.fileId = fileId;
+                theFunc.calledBy = [];
+                for (const calledByElement of func.calledBy) {
+                visited.push(func.signature);
+                let calledByFunc = findCallingFunc(calledByElement.id, calledByElement.atLineNum, json, visited);
+                if (typeof(calledByFunc) !== "string") {
+                    if (theFunc.calledBy.length === 0) {
+                    theFunc.calledBy = calledByFunc;
+                    } else {
+                    theFunc.calledBy = theFunc.calledBy.concat(calledByFunc);
+                    }
+                } else {
+                    let loopBack = {};
+                    loopBack.displayName = calledByFunc + "[loop back]";
+                    loopBack.type = null;
+                    loopBack.fileId = null;
+                    loopBack.calledBy = null;
+                    theFunc.calledBy.push(loopBack);
+                }
+                }
+                functionsCalling.push(theFunc);
+
+            }
+        }
+    }
+
+  for (const lineNum of lineNumArr) {
+    if (!linesWithFunction.includes(lineNum)) {
+      let theLine = {};
+      theLine.displayName = "Line " + lineNum;
+      theLine.type = null;
+      theLine.fileId = fileId;
+      theLine.calledBy = [];
+      functionsCalling.push(theLine);
+    }
+  }
+  return functionsCalling;
+}
 
     const getFileMetadata = (files) => {
 
@@ -149,6 +281,8 @@
     usageModal.data = {};
     usageModal.inFileName = null;
     usageModal.ofFileName = null;
+    usageModal.inFile = null;
+    usageModal.ofFile = null;
     usageModal.isVisible = false;
     usageModal.show = (ofFile, inFile) => {
         usageModal.data = getFileUsage(ofFile, inFile);
@@ -156,6 +290,8 @@
         let inFileData = calledby.get(inFile);
         usageModal.inFileName = inFileData.name;
         usageModal.ofFileName = ofFileData.name;
+        usageModal.inFile = inFile;
+        usageModal.ofFile = ofFile;
         usageModal.isVisible = true;
         console.log(usageModal.data);
     }
@@ -255,7 +391,8 @@
                 <p>The following functions were detected:</p>
                 <div class="list is-hoverable">
                 {#each usageModal.data as caller}
-                    <span class="list-item"> → {caller.signature}: {caller.countRefs} Refs <a href="#"> [Callgraph] </a></span><br/>
+                    <span class="list-item"> → {caller.signature}: {caller.countRefs} Refs <a href="#" on:click="{ () => {buildCallGraph(usageModal.ofFile, caller.signature)}}"> [Callgraph] </a></span><br/>
+                    <span class="list-item"> &emsp; → At lines: {caller.atLineNum.toString().replaceAll(',',', ')} </span><br/>
                 {/each}
                 </div>
             {/if}
@@ -281,7 +418,7 @@
                 <p>{listingModal.data.name} imports the following files:</p>
                 <div class="list is-hoverable">
                 {#each listingModal.data.imports as imports}
-                    <span class="list-item"> → {calledby.get(imports).filePath} <a href="#" on:click="{() => { usageModal.show(calledby.get(imports).id, listingModal.data.id) } }">(Functipon Usage)</a></span><br/>
+                    <span class="list-item"> → {calledby.get(imports).filePath} <a href="#" on:click="{() => { usageModal.show(calledby.get(imports).id, listingModal.data.id) } }">(Function Usage)</a></span><br/>
                 {/each}
                 </div>
             {/if}
@@ -311,6 +448,12 @@
                 <div id="file_{file.id}" class="node" style="top: {175 + (x * 150)}px; left: {142 + (y * 300)}px;" on:click={() => {listingModal.toggle(file.id)}}> <p> {file.filePath} </p> </div>
             {/each}
 	    {/each}
+
+    </div>
+
+    <div class="zoomable" id="tree-diagram">      
+
+        
 
     </div>
 
