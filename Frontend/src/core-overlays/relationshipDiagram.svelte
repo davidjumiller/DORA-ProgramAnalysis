@@ -441,7 +441,7 @@
     <div id="logo-wrapper">
         <img src="logo.png" alt="DORA Logo" id="logo"/>
         <div id="right-header">
-            <button class="button" on:click="{() => {showInputBox()}}">Change Repo</button>
+            <button class="button" on:click="{() => {window.location.reload(true)}}">Change Repo</button>
             <button class="button" on:click="{() => {window.location = `https://github.students.cs.ubc.ca/cpsc410-2021w-t1/Project2Group24/blob/master/README.md`}}">Learn More</button>
         </div>
     </div>
