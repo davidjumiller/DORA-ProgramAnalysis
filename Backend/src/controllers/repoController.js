@@ -43,14 +43,6 @@ repoController.fetchRepo = async(req, res) => {
   });
 }
 
-repoController.testRead = async(req, res) => {
-  parseDir('./src/inputs/testRepo');
-  res.code(200);
-  res.send({
-    'message': 'Success, the folders are read'
-  });
-}
-
 repoController.parseLocal = async(req, res) => {
   try {
     const data = parseDir(req.body.path, req.body.folderName);

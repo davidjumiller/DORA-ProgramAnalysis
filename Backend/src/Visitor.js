@@ -4,26 +4,26 @@ export default class Visitor {
     constructor(output, curFileID) {
         this.curFileID = curFileID;
         this.output = output;
-        this.temp = output.find(file => { return file.id == "temp" });
+        this.temp = output.find(file => { return file.id === "temp" });
     }
 
     visitNodes(nodes, vars) { 
         // Handle if we are given a second argument "vars", representing variables from higher levels of scope
         // Additionally, copy this array of variables so that changes down this part of the tree won't propogate to other branches.
         let variables = [];
-        if (typeof vars != "undefined") { variables = JSON.parse(JSON.stringify(vars)) } // Hack to pass a copy of the object (by value)
+        if ((typeof vars !== "undefined") && (vars !== null)) { variables = JSON.parse(JSON.stringify(vars)) } // Hack to pass a copy of the object (by value)
 
         // We do a first run through to identify variable declarations, also called "hoisting"
         // This is necessary to obtain proper scope and identify which methods are being called
         for (let node of nodes) {
-            if (node.type == 'VariableDeclaration') {
+            if (node.type === 'VariableDeclaration') {
                 this.visitVariableDeclaration(node, variables);
             }
         }
 
         // Do a second pass for everything else
         for (let node of nodes) {
-            if (node.type != 'VariableDeclaration') {
+            if (node.type !== 'VariableDeclaration') {
                 this.visitNode(node, variables); 
             }
         }
@@ -118,13 +118,13 @@ export default class Visitor {
         // Keeps track of variables, adds additional class key to object if initialized to new object.
         node.declarations.forEach(declaration => {
             let matchingVar = vars.findIndex(variable => {
-                return variable.name == declaration.id.name;
+                return variable.name === declaration.id.name;
             });
             
             // Push a new "variable" object
-            if (matchingVar == -1) {
+            if (matchingVar === -1) {
                 let type;
-                if (declaration.init != null) {
+                if (declaration.init !== null && declaration.init !== undefined) {
                     type = declaration.init.type;
                 } else {
                     type = null;
@@ -133,7 +133,7 @@ export default class Visitor {
                     "name": declaration.id.name,
                     "type": type
                 }
-                if (type == "NewExpression") {
+                if (type === "NewExpression") {
                     variable["class"] = declaration.init.callee.name;
                 }
                 vars.push(variable);
@@ -143,7 +143,7 @@ export default class Visitor {
              *  the more global value with the local one */
             } else {
                 vars[matchingVar].type = declaration.init;
-                if (declaration.init == "NewExpression") {
+                if (declaration.init === "NewExpression") {
                     vars[matchingVar].class = declaration.init.callee.name;
                 }
             }
@@ -154,7 +154,7 @@ export default class Visitor {
     // Update the variable array with changes made (This is limited, static, check, not a compiler)
     visitAssignmentExpression(node, variables){
         // Handles the case of eg. example = () => {}
-        if (node.right.type == "ArrowFunctionExpression" || node.right.type == "FunctionExpression") {
+        if (node.right.type === "ArrowFunctionExpression" || node.right.type === "FunctionExpression") {
 
             // This builds the function name
             let funcName = "";
@@ -171,17 +171,17 @@ export default class Visitor {
             this.visitNode(node.right, variables);
         }
         // Handles tracking regular variables if they are assigned a class object
-        else if (node.left.type == "Identifier") {
+        else if (node.left.type === "Identifier") {
             variables.forEach(variable => {
-                if (variable.name == node.left.name) {
+                if (variable.name === node.left.name) {
                     variable.type = node.right.type;
-                    if (variable.type == "NewExpression"){
+                    if (variable.type === "NewExpression"){
                         variable["class"] = node.right.callee.name;
                     }
                 }
             });
         // Handles object assignment
-        } else if (node.left.type == "MemberExpression") {
+        } else if (node.left.type === "MemberExpression") {
             // Currently not currently supported, (eg. example.name = 1;)
         } else {
             console.log("Unhandled Expression, '" + node.left.type + "' discarded");
@@ -203,9 +203,9 @@ export default class Visitor {
     }
 
     importRequireHelper(relPath) {
-        let curFileObj = this.output.find(file => { return file.id == this.curFileID });
+        let curFileObj = this.output.find(file => { return file.id === this.curFileID });
         let importPath = path.join(curFileObj.filePath, "..", relPath);
-        let importedFileObj = this.output.find(file => { return importPath == file.filePath });
+        let importedFileObj = this.output.find(file => { return importPath === file.filePath });
         if (importedFileObj) {
             curFileObj.imports.push(importedFileObj.id);
             importedFileObj.importedInFiles.push(this.curFileID);
@@ -238,7 +238,7 @@ export default class Visitor {
     pushToFileObj(newObj){
         // Push the "function" object to the correct "file" object's array
         this.output.forEach(file => {
-            if (file.id == this.curFileID){
+            if (file.id === this.curFileID){
                 file.functions.push(newObj);
             }
         });
@@ -280,27 +280,27 @@ export default class Visitor {
         callParamCount = node.arguments.length;
 
         // Handle function calls ( eg. call(x, y) )
-        if (node.callee.type == "Identifier") {
+        if (node.callee.type === "Identifier") {
             callName = node.callee.name;
             callType = "Functional";
 
             // Handle require statements
-            if (callName == "require") {
+            if (callName === "require") {
                 this.importRequireHelper(node.arguments[0].value);
                 return;
             }
 
         // Handle method calls ( eg. variable.call(x, y) )
-        } else if (node.callee.type == "MemberExpression") {
-            if (node.callee.object.type == "ThisExpression") {
+        } else if (node.callee.type === "MemberExpression") {
+            if (node.callee.object.type === "ThisExpression") {
                 // Essentially ignore "this" expression
                 callName = node.callee.property.name;
                 callType = "OOP";
                 callClass = this.class;
             } else {
                 let objName = node.callee.object.name;
-                let obj = vars.findIndex(variable => { return variable.name == objName});
-                if (obj != -1 && vars[obj].type == "NewExpression") {
+                let obj = vars.findIndex(variable => { return variable.name === objName});
+                if (obj !== -1 && vars[obj].type === "NewExpression") {
                     callName = node.callee.property.name;
                     callClass = vars[obj].class;
                     callType = "OOP";
@@ -328,7 +328,7 @@ export default class Visitor {
         /** If we can't find the matching function to this call, the file 
          *  where this function resides might not have been parsed yet. 
          *  Store it for later and try again after all files are read through. */
-        if (validFunctionFound == false) {
+        if (validFunctionFound === false) {
             this.temp.calls.push(tempObj);
         }
 
@@ -361,24 +361,24 @@ export function matchCall(jsonOutput, callObj){
     // TODO: Make this only check the current file, and files that have been imported. To improve performance 
     jsonOutput.forEach(file => {
         // Don't check our temp object, which is used to store calls that we can't match to functions yet
-        if (file.id != "temp"){
+        if (file.id !== "temp"){
             file.functions.forEach(func => {
                 // Check if the function/method matches the calls name, number of parameters, and class
-                if (func.name == callObj.name 
-                    && func.paramCount == callObj.paramCount 
-                    && (!callObj.className || callObj.className == func.className)) {
+                if (func.name === callObj.name 
+                    && func.paramCount === callObj.paramCount 
+                    && (!callObj.className || callObj.className === func.className)) {
                     // Check if this function has been called in this file already, if so, increment countRef,
                     // and add the line number
                     let calledBefore = false;
                     func.calledBy.forEach(call => {
-                        if (call.id == callObj.id){
+                        if (call.id === callObj.id){
                             call.countRefs++;
                             call.atLineNum = call.atLineNum.concat(callObj.atLineNum);
                             calledBefore = true;
                         }
                     });
                     // If no calls to the function from our current file are found, create a new object and push
-                    if (calledBefore == false){
+                    if (calledBefore === false){
                         let calledByObj = {
                             "id": callObj.id,
                             "atLineNum": callObj.atLineNum,
@@ -393,9 +393,9 @@ export function matchCall(jsonOutput, callObj){
     });
     
     // Checks parent's class methods if matching method in instantiated class can't be found
-    let temp = jsonOutput.find(file => { return file.id == "temp" });
+    let temp = jsonOutput.find(file => { return file.id === "temp" });
     let superClass = temp.extends[callObj.className];
-    if (superClass && matched == false) {
+    if (superClass && matched === false) {
         let newObj = {
             "id": callObj.id,
             "name": callObj.name,
