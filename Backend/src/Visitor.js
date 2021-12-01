@@ -232,15 +232,16 @@ export default class Visitor {
 
         // Handle method calls ( eg. variable.call(x, y) )
         } else if (node.callee.type == "MemberExpression") {
-            callName = node.callee.property.name;
-            callType = "OOP";
             let objName = node.callee.object.name;
 
             let obj = vars.findIndex(variable => { return variable.name == objName});
             if (obj != -1 && vars[obj].type == "NewExpression") {
+                callName = node.callee.property.name;
                 callClass = vars[obj].class;
+                callType = "OOP";
             } else {
-                callClass = null;
+                callName = node.callee.object.name + "." + node.callee.property.name;
+                callType = "Functional";
             }
         } else {
             console.log("Unrecognized type in CallExpression");
