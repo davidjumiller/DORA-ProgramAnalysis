@@ -98,7 +98,7 @@ export default class Visitor {
     // Update the variable array with changes made (This is limited, static, check, not a compiler)
     visitAssignmentExpression(node, variables){
         // Handles the case of eg. example = () => {}
-        if (node.right.type == "ArrowFunctionExpression") {
+        if (node.right.type == "ArrowFunctionExpression" || node.right.type == "FunctionExpression") {
 
             // This builds the function name
             let funcName = "";
