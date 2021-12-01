@@ -128,7 +128,7 @@ export default class Visitor {
             // Push a new "variable" object
             if (matchingVar === -1) {
                 let type;
-                if (declaration.init !== null && declaration.init !== undefined) {
+                if (declaration.init) {
                     type = declaration.init.type;
                 } else {
                     type = null;
@@ -151,14 +151,24 @@ export default class Visitor {
                     vars[matchingVar].class = declaration.init.callee.name;
                 }
             }
-            if (declaration.init.type === "ArrowFunctionExpression" || declaration.init.type === "FunctionExpression") {
-                this.functionExpressionHelper(declaration.init, declaration.id);
+            if (declaration.init) {
+                if (declaration.init.type === "ArrowFunctionExpression" || declaration.init.type === "FunctionExpression") {
+                    this.functionExpressionHelper(declaration.init, declaration.id);
+                }
+                this.visitNode(declaration.init, vars);
             }
-            this.visitNode(declaration.init, vars);
         });
     }
 
     functionExpressionHelper(node, identifier){
+        let funcName = this.buildMemberName(identifier);
+
+        let newFunction = this.buildFunctionObj(node.params, funcName, node.loc.start.line, node.loc.end.line);
+        newFunction["type"] = "Functional";
+        this.pushToFileObj(newFunction);
+    }
+
+    buildMemberName(identifier){
         // This builds the function name
         let funcName = "";
         let nodeTemp = identifier;
@@ -167,12 +177,8 @@ export default class Visitor {
             nodeTemp = nodeTemp.object;
         }
         funcName = nodeTemp.name + funcName;
-
-        let newFunction = this.buildFunctionObj(node.params, funcName, node.loc.start.line, node.loc.end.line);
-        newFunction["type"] = "Functional";
-        this.pushToFileObj(newFunction);
+        return funcName;
     }
-
 
     // Update the variable array with changes made (This is limited, static, check, not a compiler)
     visitAssignmentExpression(node, variables){
@@ -302,7 +308,7 @@ export default class Visitor {
                     callClass = vars[obj].class;
                     callType = "OOP";
                 } else {
-                    callName = node.callee.object.name + "." + node.callee.property.name;
+                    callName = this.buildMemberName(node.callee);
                     callType = "Functional";
                 }
             }
