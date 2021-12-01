@@ -571,7 +571,7 @@
 	.zoomable-wrapper {
         height: 100vh;
         width: 100vw;
-        background: url(tile.png);
+        background: url(/tile.png);
         background-blend-mode: darken;
     }
 
