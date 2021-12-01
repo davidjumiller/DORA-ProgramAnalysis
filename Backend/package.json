@@ -13,6 +13,9 @@
     "type": "git",
     "url": "git@github.students.cs.ubc.ca:cpsc410-2021w-t1/Project2Group24.git"
   },
+  "engines": {
+    "node": ">=15.0.0"
+  },
   "author": "Howard, Dhruv, Michelle, David",
   "license": "ISC",
   "dependencies": {
