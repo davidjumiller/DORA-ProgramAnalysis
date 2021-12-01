@@ -58,7 +58,7 @@ repoController.parseLocal = async(req, res) => {
   } catch (error) {
     res.code(500);
     res.send({
-      'err': `Error: failed to parse the local repo ${error?.message || error}`
+      err: `Error: failed to parse the local repo ${error.message || error}`
     });
   }
 }
