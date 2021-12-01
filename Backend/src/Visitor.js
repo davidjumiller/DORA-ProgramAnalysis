@@ -30,6 +30,7 @@ export default class Visitor {
     }
 
     visitNode(node, variables) {
+        if (!node){ return }
 
         // Dynamic dispatch for each node type in the AST
         switch (node.type) {
@@ -46,6 +47,16 @@ export default class Visitor {
             case 'AssignmentExpression': return this.visitAssignmentExpression(node, variables);
             case 'ArrowFunctionExpression': return this.visitArrowFunctionExpression(node, variables);
             case 'BlockStatement': return this.visitBlockStatement(node, variables);
+            case 'ExportNamedDeclaration': return this.visitExportNamedDeclaration(node, variables);
+            case 'ExportDefaultDeclaration': return this.visitExportDefaultDeclaration(node, variables);
+            case 'TryStatement': return this.visitTryStatement(node, variables);
+            case 'CatchClause': return this.visitCatchClause(node, variables);
+            case 'ReturnStatement': return this.visitReturnStatement(node, variables);
+            case 'ForStatement': return this.visitForStatement(node, variables);
+            case 'WhileStatement': return this.visitWhileStatement(node, variables);
+            case 'SwitchStatement': return this.visitSwitchStatement(node, variables);
+            case 'SwitchCase': return this.visitSwitchCase(node, variables);
+            case 'NewExpression': return this.visitNewExpression(node, variables);
         }
     }
 
@@ -55,6 +66,51 @@ export default class Visitor {
 
     visitBlockStatement(node, vars){
         this.visitNodes(node.body, vars);
+    }
+
+    visitExportNamedDeclaration(node, vars){
+        this.visitNode(node.declaration, vars);
+    }
+
+    visitExportDefaultDeclaration(node, vars){
+        this.visitNode(node.declaration, vars);
+    }
+
+    visitTryStatement(node, vars){
+        this.visitNode(node.block, vars);
+        this.visitNode(node.handler, vars);
+        this.visitNode(node.finalizer, vars)
+    }
+
+    visitCatchClause(node, vars){
+        this.visitNode(node.body, vars)
+    }
+
+    visitReturnStatement(node, vars){
+        this.visitNode(node.argument, vars);
+    }
+
+    visitForStatement(node, vars){
+        this.visitNode(node.body, vars);
+    }
+
+    visitWhileStatement(node, vars){
+        this.visitNode(node.test, vars);
+        this.visitNode(node.body, vars);
+    }
+
+    visitSwitchStatement(node, vars){
+        this.visitNode(node.discriminant, vars);
+        this.visitNodes(node.cases, vars);
+    }
+
+    visitSwitchCase(node, vars){
+        this.visitNode(node.test, vars);
+        this.visitNodes(node.consequent, vars);
+    }
+
+    visitNewExpression(node, vars){
+        this.visitNodes(node.arguments, vars);
     }
 
     visitVariableDeclaration(node, vars){
@@ -232,19 +288,25 @@ export default class Visitor {
 
         // Handle method calls ( eg. variable.call(x, y) )
         } else if (node.callee.type == "MemberExpression") {
-            let objName = node.callee.object.name;
-
-            let obj = vars.findIndex(variable => { return variable.name == objName});
-            if (obj != -1 && vars[obj].type == "NewExpression") {
+            if (node.callee.object.type == "ThisExpression") {
+                // Essentially ignore "this" expression
                 callName = node.callee.property.name;
-                callClass = vars[obj].class;
                 callType = "OOP";
+                callClass = this.class;
             } else {
-                callName = node.callee.object.name + "." + node.callee.property.name;
-                callType = "Functional";
+                let objName = node.callee.object.name;
+                let obj = vars.findIndex(variable => { return variable.name == objName});
+                if (obj != -1 && vars[obj].type == "NewExpression") {
+                    callName = node.callee.property.name;
+                    callClass = vars[obj].class;
+                    callType = "OOP";
+                } else {
+                    callName = node.callee.object.name + "." + node.callee.property.name;
+                    callType = "Functional";
+                }
             }
         } else {
-            console.log("Unrecognized type in CallExpression");
+            console.log("Unrecognized type in CallExpression: " + node.callee.type);
             return;
         }
 
