@@ -102,6 +102,7 @@ List of ideas being considered:
 # Milestone 3
 
 ## Wireframe Diagrams (Visualization)
+** Includes extended target features.
 
 ### Entrypoint
 <img src="https://i.postimg.cc/CMPTQmqp/Slide1.jpg" alt="Figure 1. Relationship Screen (Entrypoint)">
@@ -127,7 +128,7 @@ List of ideas being considered:
 
  - Visualization changes were made, we originally intended to have an arrow going from every call to every callee, but this would end up being a lot of arrows. For less clutter we have arrows only between each file with additional information on click.
 
-- Further added a sidebar with the ability to hide the modules contained in a certain directory to help the user navigate the visualization better and reduce visual overload
+- Further added a sidebar with the ability to hide the modules contained in a certain directory to help the user navigate the visualization better and reduce visual overload is being considered.
 
 ## Progress so far
 
@@ -288,6 +289,22 @@ Since now you have multiple choices at a method invocation, you will also need t
 - Milestone 4: Friday, Nov. 19th
 - Milestone 5: Friday, Nov. 26th
 - Project: Wednesday Dec. 1st (8:59am)
+
+## Final User Studies
+Users (Both JavaScript Developers): Attempt to analyse at least one JavaScript repository of your choice, conforming to ‘strict mode’ requirements. Comment on the usefulness and accuracy of the tool.
+
+Comments from User 1:
+
+* The tool provided is useful for determining the relationships between various files in a JavaScript program.
+* It can serve as a good first introduction to small open-source projects on GitHub, such that a new contributor can familiarize themselves.
+* The tool still needs some refinement as the information displayed about function usage is not always accurate.
+
+Comments from User 2: 
+
+* Relationships displayed between files give a good first-time overview to unknown projects on Github.
+* The tool is able to process multiple programming styles with decent accuracy.
+* I observed some discrepancies in the number of references counted by the tool in the function usage section. However, it still gives a fair idea of how an import is used.
+* It is somewhat restrictive that it only supports repos adhering to strict mode and therefore, is not compatible with a significant number of repos.
 
 
 
