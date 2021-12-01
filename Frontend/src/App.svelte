@@ -3,6 +3,9 @@
 	export let name;
 </script>
 
+<svelte:head>
+	<title>DORA</title>
+</svelte:head>
 <main>
 	<RelDiagram/>
 </main>
@@ -18,5 +21,5 @@
 		width: 100%;
 		padding: 0 !important;
 	}
-	
+
 </style>

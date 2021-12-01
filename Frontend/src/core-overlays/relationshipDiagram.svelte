@@ -40,9 +40,74 @@
         }
 
     }
-
+    let callModalData = "";
     const buildCallGraph = (ofFile, signature) => {
+
+        callModalData = "";
+        callModal = true;
         let struc = getCallHierarchy(ofFile, signature, mockup);
+        usageModal.isVisible = false;
+
+        let toInject = ``;
+        let items = ``;
+        for (let e of struc.calledBy) {
+
+            let meta = calledby.get(e.fileId);
+            let filePath = "Unknown File";
+            let type = "Unknown type";
+            if (meta) {
+                filePath = meta.filePath;
+            }
+            if (e.type) {
+                type = e.type;
+            }
+
+            items += `<li> [${type}] ${e.displayName} <i>in ${calledby.get(e.fileId).filePath}</i> ${getAdditionalCallGraph(e)}</li>`;
+        }
+
+        if (items != ``) {
+            toInject = `<ul>${items}</ul>`;
+        }
+
+        let meta = calledby.get(struc.fileId);
+        let filePath = "Unknown File";
+        let type = "Unknown type";
+        if (meta) {
+            filePath = meta.filePath;
+        }
+        if (struc.type) {
+            type = struc.type;
+        }
+        callModalData = `<ul><li> [${type}] ${struc.displayName} <i>in ${filePath}</i> ${toInject}</li></ul>`;
+    }
+
+    const getAdditionalCallGraph = (struc) => {
+
+        let toInject = ``;
+        let items = ``;
+        for (let e of struc.calledBy) {
+
+            let meta = calledby.get(e.fileId);
+            let filePath = "Unknown File";
+            let type = "Unknown type";
+            if (meta) {
+                filePath = meta.filePath;
+            }
+            if (e.type) {
+                type = e.type;
+            }
+
+            items += `<li> [${type}] ${e.displayName} <i>in ${filePath}</i> ${getAdditionalCallGraph(e)}</li>`;
+        }
+
+        if (items != ``) {
+            toInject = `<ul>${items}</ul>`;
+        }
+
+
+
+        return toInject;
+
     }
 
     const sortDataByDirectory = (files) => {
@@ -264,6 +329,8 @@
     let filesMap = [];
     let filesArray = [];
 
+    let callModal = false;
+
     let listingModal = {};
     listingModal.data = {};
     listingModal.data.importedIn = [];
@@ -275,6 +342,12 @@
         let data = calledby.get(e);
         console.log(data);
         listingModal.data =  data;
+    }
+    listingModal.show = () => {
+        listingModal.isVisible = true;
+    }
+    listingModal.hide = () => {
+        listingModal.isVisible = false;
     }
 
     let usageModal = {};
@@ -292,11 +365,20 @@
         usageModal.ofFileName = ofFileData.name;
         usageModal.inFile = inFile;
         usageModal.ofFile = ofFile;
+        listingModal.isVisible = false;
         usageModal.isVisible = true;
         console.log(usageModal.data);
     }
     usageModal.hide = () => {
         usageModal.isVisible = false;
+        listingModal.isVisible = true;
+    }
+    usageModal.see = () => {
+        usageModal.isVisible = true;
+    }
+
+    const showInputBox = () => {
+        toggleInput = true;
     }
 
     const build = () => {
@@ -354,9 +436,8 @@
     <div id="logo-wrapper">
         <img src="logo.png" alt="DORA Logo" id="logo"/>
         <div id="right-header">
-            <button class="button">Change Repo</button>
-            <button class="button">Quick Reference</button>
-            <button class="button">Learn More</button>
+            <button class="button" on:click="{() => {showInputBox()}}">Change Repo</button>
+            <button class="button" on:click="{() => {window.location = `https://github.students.cs.ubc.ca/cpsc410-2021w-t1/Project2Group24/blob/master/README.md`}}">Learn More</button>
         </div>
     </div>
 </header>
@@ -439,6 +520,27 @@
         </div>
     </div>
 {/if}
+
+{#if callModal}
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Call Graph</p>
+            <button class="delete" aria-label="Back" on:click="{() => {
+                callModal = false;
+                usageModal.isVisible = true;
+            }}"></button>
+        </header>
+        <section class="modal-card-body" id="callModal_view">
+            <p>Call graph rendered as nested lists:</p>
+            {@html callModalData}
+        </section>
+        </div>
+    </div>
+{/if}
+
+
 <div class="zoomable-wrapper">
     
     <div class="zoomable" id="diagram">      
@@ -531,7 +633,7 @@
     }
     #right-header {
         position: absolute;
-        width: 451px;
+        width: 352px;
         right: -75vw;
         top: 10px;
         z-index: 5 !important;

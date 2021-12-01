@@ -77,3 +77,8 @@ svg {
 	fill:#1C85E7 !important;
 	stroke: #1C85E7 !important;
 }
+
+ul {
+	padding: revert !important;
+	list-style: revert !important;
+}
