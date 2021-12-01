@@ -4,10 +4,15 @@
 
 import fastify from 'fastify';
 import routes from './routes.js';
+import * as cors from 'fastify-cors';
 
 const build = (opts={}) => {
 
   const app = fastify(opts);
+
+  app.register(cors, { 
+ 
+  })
 
   // Routes
 
