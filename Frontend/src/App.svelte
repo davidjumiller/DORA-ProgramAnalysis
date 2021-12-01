@@ -8,6 +8,9 @@
 </main>
 
 <style>
+
+@import "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma-rtl.min.css";
+
 	main {
 		position: relative;
 
@@ -15,4 +18,5 @@
 		width: 100%;
 		padding: 0 !important;
 	}
+	
 </style>

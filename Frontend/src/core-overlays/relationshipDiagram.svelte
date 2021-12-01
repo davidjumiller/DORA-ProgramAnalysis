@@ -1,4 +1,5 @@
 <script>
+
     import { onMount } from 'svelte';
 	import panzoom from "panzoom";
 
@@ -7,158 +8,34 @@
 
     // Mockup data
 
-    let mockup = [
-        {
-            "id": 1,
-            "filePath": "/src/app.js",
-            "functions": [
-            {
-                "signature": "foo(x)",
-                "type": "O",
-                "startLine": 135,
-                "endLine": 150,
-                "calledBy": [
-                {
-                    "id": 2,
-                    "atLineNum": [
-                    100,
-                    152
-                    ],
-                    "countRefs": "3"
-                },
-                {
-                    "id": 3,
-                    "atLineNum": [
-                    10
-                    ],
-                    "countRefs": "1"
-                }
-                ]
+
+    let repoURL = "";
+    
+    let mockup = [];
+
+    const fetchRepo = () => {
+
+        if (repoURL == "") {
+            alert("Invalid URL");
+        } else {
+            fetch("http://localhost:3000/v1/parse", {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json"
             },
-            {
-                "signature": "foo(x, y)",
-                "type": "P",
-                "startLine": 99,
-                "endLine": 111,
-                "calledBy": [
-                {
-                    "id": 2,
-                    "atLineNum": [
-                    102
-                    ],
-                    "countRefs": "1"
-                }
-                ]
-            }
-            ],
-            "importedInFiles": [
-            2,
-            3
-            ]
-        },
-        {
-            "id": 2,
-            "filePath": "/lib/haha.js",
-            "functions": [
-            {
-                "signature": "blah(x)",
-                "type": "O",
-                "startLine": 95,
-                "endLine": 110,
-                "calledBy": [
-                {
-                    "id": 1,
-                    "atLineNum": [
-                    110,
-                    125
-                    ],
-                    "countRefs": "2"
-                },
-                {
-                    "id": 2,
-                    "atLineNum": [
-                    1
-                    ],
-                    "countRefs": "1"
-                }
-                ]
-            },
-            {
-                "signature": "bobTheBuilder(x, y)",
-                "type": "Bam",
-                "startLine": 135,
-                "endLine": 155,
-                "calledBy": [
-                {
-                    "id": 3,
-                    "atLineNum": [
-                    100
-                    ],
-                    "countRefs": "1"
-                },
-                {
-                    "id": 1,
-                    "atLineNum": [
-                    69
-                    ],
-                    "countRefs": "1"
-                }
-                ]
-            }
-            ],
-            "importedInFiles": [
-            1,
-            3
-            ]
-        },
-        {
-            "id": 3,
-            "filePath": "/lib/bam.js",
-            "functions": [
-            {
-                "signature": "hornet(x)",
-                "type": "P",
-                "startLine": 135,
-                "endLine": 150,
-                "calledBy": [
-                {
-                    "id": 2,
-                    "atLineNum": [
-                    1
-                    ],
-                    "countRefs": "1"
-                }
-                ]
-            },
-            {
-                "signature": "cornTheCorner(x, y)",
-                "type": "AB",
-                "startLine": 135,
-                "endLine": 150,
-                "calledBy": [
-                {
-                    "id": 2,
-                    "atLineNum": [
-                    100
-                    ],
-                    "countRefs": "1"
-                },
-                {
-                    "id": 3,
-                    "atLineNum": [
-                    69
-                    ],
-                    "countRefs": "1"
-                }
-                ]
-            }
-            ],
-            "importedInFiles": [
-            1,
-            2
-            ]
+                "body": `{"url":"${repoURL}"}`
+            })
+            .then(response => {
+                mockup = response.data;
+            })
+            .catch(err => {
+                alert(repoURL);
+                alert(err);
+                console.log(err);
+            });
         }
-    ]
+
+    }
 
     const sortDataByDirectory = (files) => {
 
@@ -167,8 +44,9 @@
         for (let file of files) {
             
             let filePath = file.filePath;
-            let dir = filePath.substring(0, filePath.lastIndexOf("/"));
-
+            console.log(filePath);
+            let dir = filePath.substring(0, filePath.lastIndexOf("\\"));
+            console.log(dir);
             if (sortedData.has(dir)) {
 
                 let existingFiles = sortedData.get(dir);
@@ -192,10 +70,87 @@
         return sortedData;
     }
 
-    let filesMap = sortDataByDirectory(mockup);
+    const getFileMetadata = (files) => {
 
-    let filesArray = Array.from(filesMap);
-    console.log(filesArray);
+        let fileRelations = new Map();
+
+        for (let file of files) {
+
+            let key = file.id;
+
+            let value = {
+                imports: file.imports,
+                importedIn: file.importedInFiles,
+                filePath: file.filePath,
+                name: file.filePath.substring(file.filePath.lastIndexOf('\\')+1, file.filePath.length),
+                functions: file.functions,
+                id: file.id
+            }
+
+            fileRelations.set(key, value);
+        }
+
+        return fileRelations;
+    }
+
+    let calledby = null;
+
+    const getFileUsage = (ofFile, inFile) => {
+
+        let ofFileData = calledby.get(ofFile);
+
+        let callers = [];
+
+        for (let func of ofFileData.functions) {
+
+            let signature = func.signature;
+
+            console.log(func.signature);
+
+            for (let caller of func.calledBy) {
+                console.log(caller.id);
+                if (caller.id == inFile) {
+
+                    caller.signature = signature;
+                    callers.push(caller);
+
+                }
+            }
+
+        }
+
+        return callers;
+    }
+
+    let filesMap = [];
+    let filesArray = [];
+
+    let listingModal = {};
+    listingModal.data = null;
+    listingModal.isVisible = false;
+    listingModal.toggle = (e = null) => {
+        listingModal.isVisible = !listingModal.isVisible;
+        let data = calledby.get(parseInt(e.target.id.split('').pop()));
+        listingModal.data =  data;
+    }
+
+    let usageModal = {};
+    usageModal.data = null;
+    usageModal.inFileName = null;
+    usageModal.ofFileName = null;
+    usageModal.isVisible = false;
+    usageModal.show = (ofFile, inFile) => {
+        usageModal.data = getFileUsage(ofFile, inFile);
+        let ofFileData = calledby.get(ofFile);
+        let inFileData = calledby.get(inFile);
+        usageModal.inFileName = inFileData.name;
+        usageModal.ofFileName = ofFileData.name;
+        usageModal.isVisible = true;
+        console.log(usageModal.data);
+    }
+    usageModal.hide = () => {
+        usageModal.isVisible = false;
+    }
 
     onMount(() => {
 
@@ -203,108 +158,42 @@
         panzoom(zoomableElement);
 
         const instance = jsPlumbBrowserUI.newInstance({
-            container: document.querySelector('#diagram')
+            container: document.querySelector('#diagram'),
+            elementsDraggable: false
         })
 
+        calledby = getFileMetadata(mockup);
+        filesMap = sortDataByDirectory(mockup);
+        filesArray = Array.from(filesMap);
 
-        // get 2 maps : called by and calls to
+        for (const [key, values] of calledby.entries()) {
 
-        const getFilesThatCallKeyFile = (json) => {
+            for (let value of values.imports) {
 
-            let filesThatCallsKeyFile = new Map();
-
-            for (const jsonElement of json) {
-
-            const currentFileId = jsonElement.id;
-            filesThatCallsKeyFile.set(currentFileId, []);
-
-            const funcArr = jsonElement.functions;
-
-                for (const func of funcArr) {
-
-                    const calledByArr = func.calledBy;
-
-                    for (const element of calledByArr) {
-
-                        let valueArr = filesThatCallsKeyFile.get(currentFileId);
-                        if (!valueArr.includes(element.id)) {
-                            valueArr.push(element.id);
-                        }
-                    }
-                }
-            }
-
-            return filesThatCallsKeyFile;
-        }
-
-        const getWhatKeyFileCalls = (json) => {
-            let whatKeyFileCalls = new Map();
-
-            for (const jsonElement of json) {
-                const currFileId = jsonElement.id;
-                whatKeyFileCalls.set(currFileId, []);
-
-                for (const otherFile of json) {
-
-                    const otherId = otherFile.id;
-
-                    if (otherId !== currFileId) {
-
-                        const funcArr = otherFile.functions;
-
-                        for (const func of funcArr) {
-
-                            const calledByArr = func.calledBy;
-
-                            for (const element of calledByArr) {
-
-                                let valueArr = whatKeyFileCalls.get(currFileId);
-
-                                if (!valueArr.includes(otherId) && element.id === currFileId) {
-
-                                    valueArr.push(otherId);
-                                }
+                if (value != key) {
+                    console.log(`${value} - ${key}`)
+                    instance.connect({
+                        source: document.querySelector(`#file_${value}`),
+                        target: document.querySelector(`#file_${key}`),
+                        detachable: false,
+                        anchor:"Continuous",
+                        connector: {
+                            type: FlowchartConnector.type,
+                            options: {
+                                alwaysRespectStubs: false,
+                                cornerRadius: 5
                             }
-                        }
-                    }
+                        },
+                        overlays:[ 
+                            { type:"Arrow", options:{location:1}}
+                        ],
+                        endpoints: ["Dot", "Blank"]
+                    })
                 }
-            }
-
-            return whatKeyFileCalls;
-
-        }
-
-        // Make super map - sorted by type of relationship i.e. called from, calls to, and bi-directional.
-
-        let calledby = getFilesThatCallKeyFile(mockup);
-        alert('hi');
-
-        // for (const [key, values] of calledby.entries()) {
-
-        //     for (let value of values) {
-
-        //         if (value != key) {
-        //             console.log(`${value} - ${key}`)
-        //             instance.connect({
-        //                 source: document.querySelector(`#file_${value}`),
-        //                 target: document.querySelector(`#file_${key}`),
-        //                 anchor:"Continuous",
-        //                 connector: {
-        //                     type: FlowchartConnector.type,
-        //                     options: {
-        //                         alwaysRespectStubs: false,
-        //                         cornerRadius: 5
-        //                     }
-        //                 },
-        //                 overlays:[ 
-        //                     { type:"Arrow", options:{location:1}}
-        //                 ]
-        //             })
-        //         }
                 
-        //     }
+            }
             
-        // }
+        }
 
         // Generate nodes/divs
 
@@ -315,13 +204,100 @@
 
 </script>
 
+<header>
+    <div id="logo-wrapper">
+        <img src="logo.png" alt="DORA Logo" id="logo"/>
+        <div id="right-header">
+            <button class="button">Change Repo</button>
+            <button class="button">Quick Reference</button>
+            <button class="button">Learn More</button>
+        </div>
+    </div>
+</header>
+
+<div class="modal is-active">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+        <div id="input-area">   
+            <div class="control">
+                <h3 class="title is-6">Welcome! Enter public repo URL</h3>
+                <input class="input is-focused" type="text" placeholder="Github URL" bind:value={repoURL}>
+                <button class="button is-primary" on:click="{() => { fetchRepo() }}"> Analyse This </button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+{#if usageModal.isVisible}
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Usage of Functions</p>
+            <button class="delete" aria-label="Back" on:click="{usageModal.hide()}"></button>
+        </header>
+        <section class="modal-card-body">
+            <h3 class="title is-6">Usage of {usageModal.ofFileName} in {usageModal.inFileName}</h3>
+            {#if usageModal.data.length == 0}
+                <p>No functions of {usageModal.ofFileName} are used in {usageModal.inFileName}, only properties are used.</p>
+            {:else}
+                <p>The following functions were detected:</p>
+                <div class="list is-hoverable">
+                {#each usageModal.data as caller}
+                    <span class="list-item"> → {caller.signature}: {caller.countRefs} Refs <a href="#"> [Callgraph] </a></span><br/>
+                {/each}
+                </div>
+            {/if}
+        </section>
+        </div>
+    </div>
+{/if}
+
+
+{#if listingModal.isVisible}
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">{listingModal.data.name}</p>
+            <button class="delete" aria-label="close" on:click="{listingModal.toggle()}"></button>
+        </header>
+        <section class="modal-card-body">
+            <h3 class="title is-5">Imports</h3>
+            {#if listingModal.data.imports.length == 0}
+                <p>{listingModal.data.name} does not import any '.js' file.</p>
+            {:else}
+                <p>{listingModal.data.name} imports the following files:</p>
+                <div class="list is-hoverable">
+                {#each listingModal.data.imports as imports}
+                    <span class="list-item"> → {calledby.get(imports).filePath} <a href="#" on:click="{() => { usageModal.show(calledby.get(imports).id, listingModal.data.id) } }">(Functipon Usage)</a></span><br/>
+                {/each}
+                </div>
+            {/if}
+            <br/>
+
+            <h3 class="title is-5">Exports</h3>
+            {#if listingModal.data.importedIn.length == 0}
+                <p>{listingModal.data.name} is not exported to any '.js' file.</p>
+            {:else}
+                <p>{listingModal.data.name} is exported to (imported by) the following files:</p>
+                <div class="list is-hoverable">
+                {#each listingModal.data.importedIn as imported}
+                    <span class="list-item"> → {calledby.get(imported).filePath} <a href="#" on:click="{() => { usageModal.show(listingModal.data.id, calledby.get(imported).id) }}">(Function Usage)</a></span><br/>
+                {/each}
+                </div>
+            {/if}
+        </section>
+        </div>
+    </div>
+{/if}
 <div class="zoomable-wrapper">
     
     <div class="zoomable" id="diagram">      
 
         {#each filesArray as dir, y}
             {#each dir[1] as file, x}
-                <div id="file_{file.id}" class="node" style="margin-top: {(x * 100)}px; margin-left: {(y * 250)}px;"> {file.filePath} </div>
+                <div id="file_{file.id}" class="node" style="top: {175 + (x * 150)}px; left: {142 + (y * 300)}px;" on:click={(e) => {listingModal.toggle(e)}}> <p> {file.filePath} </p> </div>
             {/each}
 	    {/each}
 
@@ -347,8 +323,6 @@
         position: absolute;
         width: 190px;
         height: 82px;
-        left: 142px;
-        top: 98px;
 
         background: rgba(244, 244, 244, 0.76);
         border: 1px solid #B0B0B0;
@@ -358,8 +332,66 @@
         z-index: 1;
     }
 
-    svg {
-        z-index: 0;
+    .node:hover{
+        background: rgba(255, 255, 255, 1);
+        cursor: pointer;
+    }
+
+    .node p {
+        position: relative;
+        top: 15px;
+        left: 10px; 
+    }
+
+    #logo-wrapper {
+        position: absolute;
+        width: 326px;
+        height: 60px;
+        left: 50px;
+        top: 27.5px;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.81) 0%, rgba(255, 255, 255, 0.6237) 100%);
+        box-shadow: 0px 0px 25px rgba(181, 181, 181, 0.25);
+        border-radius: 75px;
+        z-index: 5 !important;
+    }
+
+    #logo {
+
+        height: 60px;
+        width: auto;
+        padding: 10px;
+        margin-left: 15px;
+    }
+
+    #right-header button {
+        width: 131px;
+        height: 41px;
+
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.81) 0%, rgba(255, 255, 255, 0.6237) 100%);
+        box-shadow: 0px 0px 25px rgba(181, 181, 181, 0.25);
+        border-radius: 75px;
+        border-style: none;
+        margin-left: 5px;
+        color: #767676;
+        font-size: 12pt;
+    }
+    #right-header {
+        position: absolute;
+        width: 451px;
+        right: -75vw;
+        top: 10px;
+        z-index: 5 !important;
+    }
+
+    #input-area {
+        padding: 75px;
+        background: rgba(255, 255, 255);
+        border-radius: 25px;
+    }
+
+    #input-area button {
+        float: right;
+        margin-top: 10px;;
     }
 
 </style>

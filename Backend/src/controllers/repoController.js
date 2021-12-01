@@ -25,6 +25,8 @@ repoController.fetchRepo = async(req, res) => {
   download(repo, dest, function (err) {
     if (err) {
       console.log(`Error: ${ err.message }`);
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Methods", "POST");
       res.code(400);
       res.send({
         'error': `Failed to download repo from the provided url ${url}. Make sure your repo is public and the link is correct.`,
@@ -34,6 +36,8 @@ repoController.fetchRepo = async(req, res) => {
       console.log(`Success, the repo is saved at ${ dest }`);
       const data = parseDir(dest, folderName);
       rmSync(dest, {recursive: true});
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Methods", "POST");
       res.code(200);
       res.send({
         'msg': `Success, the repo is successfully parsed`,
