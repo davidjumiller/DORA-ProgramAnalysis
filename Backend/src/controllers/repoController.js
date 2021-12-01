@@ -29,7 +29,7 @@ repoController.fetchRepo = async(req, res) => {
       //res.header("Access-Control-Allow-Methods", "POST");
       res.code(400);
       res.send({
-        'error': `Failed to download repo from the provided url ${url}. Make sure your repo is public and the link is correct.`,
+        'error': `Failed to download & parse repo from the provided url ${url}. Make sure your repo is public, compatible, & the link is correct.`,
       });
     }
     else {

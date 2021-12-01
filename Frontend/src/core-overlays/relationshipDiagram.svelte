@@ -16,7 +16,7 @@
         if (repoURL == "") {
             alert("Invalid URL");
         } else {
-            fetch("http://localhost:3000/v1/parse", {
+            fetch("https://dora-api-5pn92.ondigitalocean.app/v1/parse", {
                 "method": "POST",
                 "headers": {
                     "Content-Type": "application/json"
@@ -24,13 +24,18 @@
                 "body": `{"url":"${repoURL}"}`
             })
             .then(async(response) => {
-                let body = await response.json();
-                mockup = body.data;
-                console.log(mockup)
-                calledby = getFileMetadata(mockup);
-                filesMap = sortDataByDirectory(mockup);
-                filesArray = Array.from(filesMap);
-                toggleInput = false;
+                if (!response.ok) {
+                    let body = await response.json();
+                    alert(body.error);
+                } else {
+                    let body = await response.json();
+                    mockup = body.data;
+                    console.log(mockup)
+                    calledby = getFileMetadata(mockup);
+                    filesMap = sortDataByDirectory(mockup);
+                    filesArray = Array.from(filesMap);
+                    toggleInput = false;
+                }
             })
             .catch(err => {
                 alert(repoURL);
@@ -118,7 +123,7 @@
             
             let filePath = file.filePath;
             console.log(filePath);
-            let dir = filePath.substring(0, filePath.lastIndexOf("\\"));
+            let dir = filePath.substring(0, filePath.lastIndexOf("/"));
             console.log(dir);
             if (sortedData.has(dir)) {
 
