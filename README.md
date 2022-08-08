@@ -3,9 +3,6 @@
 (Diagrammatic Observed Relationship Analyser)
 
 
-Deployment Details: <a href="https://dora-rho.vercel.app/"> Demo Link </a>
-
-
 ## Context
 This project is aimed at building a tool that helps visualise a JavaScript application to aid in understanding a program and further identifying redundant code.
 The project works with both functional and oop-style code with support for class inhieritance. It is ideal for visualising small to mid-sized projects.
